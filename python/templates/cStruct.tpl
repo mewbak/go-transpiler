@@ -1,7 +1,7 @@
 {{if .IsStruct}}
 typedef struct {{.Name}} {
-{{range .Fields}}
-    {{.Name}}
+{{range .Members}}
+    {{.Name}} -> {{.Type}}
 {{end}}
 }
 {{end}}
