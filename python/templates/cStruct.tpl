@@ -1,12 +1,11 @@
 // create in go
-extern long long create{{.Name}}() {
-}
+extern long long create{{.Name}}(
+{{if .Members}}{{range .Members}}{{if .Name}}
+    {{cType .Type}} {{.Name}},{{end}}{{end}}{{end}}
+);
 
 //free go pointer
-extern void free{{.Name}}(long long elem) {
-    
-}
-
+extern void free{{.Name}}(long long elem);
 {{if .IsStruct}}
 typedef struct {
     PyObject_HEAD

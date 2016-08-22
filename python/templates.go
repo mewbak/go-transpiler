@@ -7,6 +7,7 @@ import (
 )
 
 var cTemplate *template.Template
+var goTemplate *template.Template
 
 func init() {
 
@@ -14,12 +15,19 @@ func init() {
     base := path.Dir(filename)
 
     cGlob := path.Join(base, "templates", "c*.tpl")
-    //goGlob := path.Join(base, "templates", "go*.tpl")
 
     tpl, err := template.New("c.tpl").Funcs(templateFuncs).ParseGlob(cGlob)
     if nil != err {
         panic(err.Error())
     }
     cTemplate = tpl
+
+    goGlob := path.Join(base, "templates", "go*.tpl")
+
+    tpl, err = template.New("go.tpl").Funcs(templateFuncs).ParseGlob(goGlob)
+    if nil != err {
+        panic(err.Error())
+    }
+    goTemplate = tpl
 
 }

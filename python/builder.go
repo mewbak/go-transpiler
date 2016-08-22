@@ -3,7 +3,9 @@ package python
 import (
     "fmt"
     "os"
+    "os/exec"
     "path"
+    "path/filepath"
     "strings"
 
     "github.com/KloudKtrl/go-transpiler/transpiler"
@@ -65,9 +67,22 @@ func (b *Builder) writeGoFile() (string, error) {
     }
     defer f.Close()
 
-    for _, t := range b.m.Types {
-        f.Write([]byte(fmt.Sprintf("%s\n", t.Name)))
+    err = goTemplate.Execute(f, b.m)
+    if nil != err {
+        return "", err
     }
+
+    // run go imports so that we don't have to manage that
+    // in the templates
+    abs, _ := filepath.Abs(filename)
+    cmd := exec.Command("goimports", abs)
+    //out, _ := cmd.StdoutPipe()
+    err = cmd.Run()
+    //cmd.Wait()
+    if nil != err {
+        return filename, fmt.Errorf("python transpiler relies on goimports: %s", err)
+    }
+    //io.Copy(f, out)
 
     return filename, nil
 }
