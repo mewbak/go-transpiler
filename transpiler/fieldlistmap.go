@@ -21,8 +21,6 @@ func (flm *FieldListMap) Visit(n ast.Node) ast.Visitor {
         field := &FieldMap{}
         if len(node.Names) == 0 {
             field.Unnamed = true
-        } else {
-            field.Name = node.Names[0].String()
         }
         (*flm) = append(*flm, field)
         return field

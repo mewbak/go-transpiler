@@ -16,9 +16,10 @@ func init() {
     cGlob := path.Join(base, "templates", "c*.tpl")
     //goGlob := path.Join(base, "templates", "go*.tpl")
 
-    tpl, err := template.ParseGlob(cGlob)
+    tpl, err := template.New("c.tpl").Funcs(templateFuncs).ParseGlob(cGlob)
     if nil != err {
         panic(err.Error())
     }
     cTemplate = tpl
+
 }
