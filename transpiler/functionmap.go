@@ -6,7 +6,9 @@ import (
     "reflect"
 )
 
-// FunctionMap ...
+// FunctionMap maps a function definition from a go abstract
+// syntax tree. The function map is intended to visit ast.FuncDecl
+// nodes and their children
 type FunctionMap struct {
 
     // Name is the name of this function

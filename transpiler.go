@@ -25,9 +25,6 @@ func main() {
     var pkg string
     flag.StringVar(&pkg, "p", "", "used to transpile one or more packages")
 
-    var file string
-    flag.StringVar(&file, "f", "", "used to transpile one or more files")
-
     var out string
     flag.StringVar(&out, "o", here, "location to output to")
     flag.Parse()
@@ -48,17 +45,6 @@ func main() {
         err := transpilePackage(path.Clean(pkgPath), out)
         if nil != err {
             fmt.Println(err)
-        }
-    }
-
-    files := strings.Split(file, " ")
-    for _, filename := range files {
-        if filename == "" {
-            continue
-        }
-        err := transpileFile(path.Clean(filename), out)
-        if nil != err {
-            fmt.Printf("%s\n", err)
         }
     }
 
@@ -85,11 +71,25 @@ func transpilePackage(packageDir, outDir string) error {
 
     for pkgName, pkg := range packages {
         fmt.Printf("transpiling package: %s\n", pkgName)
+
+        pkgMap := transpiler.NewPackageMap(pkgName)
         for name := range pkg.Files {
 
-            err := transpileFile(name, outDir)
+            f, err := transpileFile(name)
             if nil != err {
                 fmt.Printf("%s\n", err)
+            } else {
+                pkgMap.AddFile(f)
+            }
+        }
+        pyBuilder := &python.Builder{}
+        output, err := pyBuilder.Build(pkgMap, outDir)
+        if nil != err {
+            fmt.Println(err)
+        } else {
+            fmt.Printf("wrote %d files:\n", len(output))
+            for _, name := range output {
+                fmt.Printf("  %s\n", name)
             }
         }
         pkgCount++
@@ -98,31 +98,25 @@ func transpilePackage(packageDir, outDir string) error {
 
 }
 
-func transpileFile(filepath, outDir string) error {
+func transpileFile(filepath string) (*transpiler.FileMap, error) {
 
     fmt.Printf("> parsing %s...\n", filepath)
     if strings.Contains(filepath, "_test.go") {
-        return fmt.Errorf("transpiling tests is not supported")
+        return nil, fmt.Errorf("transpiling tests is not supported")
     }
 
     fileSet := token.NewFileSet()
     file, err := parser.ParseFile(fileSet, filepath, nil, 0)
     if nil != err {
-        return err
+        return nil, err
     }
     if !ast.FileExports(file) {
-        return fmt.Errorf("no exported members")
+        return nil, fmt.Errorf("no exported members")
     }
 
     mapped := transpiler.NewFileMap(file, filepath)
-    pyBuilder := &python.Builder{}
-    output, err := pyBuilder.Build(mapped, outDir)
-    if nil != err {
-        return err
-    }
-
-    fmt.Printf("> wrote %s\n", output)
     fileCount++
-    return nil
+
+    return mapped, nil
 
 }

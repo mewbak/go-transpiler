@@ -6,7 +6,9 @@ import (
     "reflect"
 )
 
-// TypeMap ...
+// TypeMap maps a type definition from a go abstract
+// syntax tree. The typemap is intended to visit ast.TypeSpec
+// nodes and their children
 type TypeMap struct {
 
     // Name is the name of this type
@@ -24,9 +26,9 @@ type TypeMap struct {
     // that have proper field names in this type
     NamedMembers *FieldListMap
 
-    // Package is the name of the package that this
-    // type belongs too (set by the calling FileMap)
-    Package string
+    // Package is the package that this type
+    // belongs too (set by the calling FileMap)
+    Package *PackageMap
 
     // Functions is a list of functions that this type
     // is a reciever for (populated by the calling FileMap)
@@ -48,7 +50,7 @@ func NewTypeMap() *TypeMap {
         BaseType:     "",
         Members:      NewFieldListMap(),
         NamedMembers: NewFieldListMap(),
-        Package:      "",
+        Package:      nil,
         Functions:    make([]*FunctionMap, 0),
         IsInterface:  false,
         IsStruct:     false,
@@ -97,6 +99,12 @@ func (tm *TypeMap) Visit(n ast.Node) ast.Visitor {
 
     return tm
 
+}
+
+// SetPackage sets the package for this type for
+// easier access in transpiling functions
+func (tm *TypeMap) SetPackage(pm *PackageMap) {
+    tm.Package = pm
 }
 
 // Finalize ...

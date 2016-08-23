@@ -6,7 +6,9 @@ import (
     "reflect"
 )
 
-// FieldListMap ...
+// FieldListMap maps a list of fields from a go abstract
+// syntax tree. The fieldlistmap is intended to visit ast.FieldList
+// nodes and their children
 type FieldListMap []*FieldMap
 
 // NewFieldListMap creates an empty field list map

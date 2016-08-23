@@ -6,8 +6,9 @@ import (
     "reflect"
 )
 
-// FieldMap maps a single field member of a
-// struct, interface, param or return list.
+// FieldMap maps a field definition from a go abstract
+// syntax tree. The FieldMap is intended to visit ast.Field
+// nodes and their children
 type FieldMap struct {
     Name     string
     Type     string
