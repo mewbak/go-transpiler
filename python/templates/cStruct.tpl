@@ -9,14 +9,6 @@ extern long long create{{.Name}}(
 
 //free go pointer
 extern void free{{.Name}}(long long elem);
-{{if .IsStruct}}
-typedef struct {
-    PyObject_HEAD
-    {{- range .NamedMembers}}
-    {{cType .Type}} {{.Name}};
-    {{- end}}
-    long long go{{.Name}};
-} {{.Name}};
 
 static PyMemberDef {{.Name}}_members[] = {
 {{if .NamedMembers}}{{range .NamedMembers}}
@@ -63,9 +55,6 @@ static int
 
 {{- range .NamedMembers}}
     {{cType .Type}} {{.Name}};
-
-    {{- /*create an extra struct pointer for python objects*/}}
-    {{if eq (cType .Type) "PyObject*"}}{{.Name}} *p{{.Name}};{{end}}
 {{- end}}
 
     static char *kwlist[] = {
@@ -79,7 +68,8 @@ static int
         args, kwargs, "{{pyArgFormat .NamedMembers}}", kwlist
         {{- if len .NamedMembers}},{{end}} 
         {{- range $i, $_ := .NamedMembers}}
-        &{{.Name}}{{if eq (cType .Type) "PyObject*"}}, p{{.Name}}{{end}}{{if notLast $i $.NamedMembers}},{{end}}
+        {{if eq (cType .Type) "PyObject*"}}&{{.Name}}_type, {{end -}}
+        &{{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
         {{- end}})) {
         return -1;
     }
@@ -149,4 +139,3 @@ static PyTypeObject {{.Name}}_type = {
   0,                         //tp_alloc
   {{.Name}}_new,             //tp_new
 };
-{{end}}

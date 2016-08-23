@@ -10,6 +10,4 @@ package main
 */
 import "C"
 
-{{range .Types}}
 {{if .Name}}{{template "goStruct.tpl" .}}{{end}}
-{{end}}

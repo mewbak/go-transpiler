@@ -25,47 +25,60 @@ func (b *Builder) Build(pm *transpiler.PackageMap, outDir string) ([]string, err
 
     var created []string
 
-    for _, fm := range pm.Files {
+    for _, tm := range pm.Types {
 
-        cfile, err := b.writeCFile(fm)
+        cfiles, err := b.writeCType(tm)
         if nil != err {
             return nil, err
         }
 
-        gofile, err := b.writeGoFile(fm)
+        gofile, err := b.writeGoType(tm)
         if nil != err {
             return nil, err
         }
 
-        created = append(created, cfile, gofile)
+        created = append(created, gofile)
+        created = append(created, cfiles...)
     }
 
     return created, nil
 
 }
 
-func (b *Builder) writeCFile(fm *transpiler.FileMap) (string, error) {
+func (b *Builder) writeCType(tm *transpiler.TypeMap) ([]string, error) {
 
-    filename := path.Join(b.out, path.Base(fm.Name))
-    filename = setExtension(filename, ".c")
+    filename := path.Join(b.out, path.Base(tm.Name))
+    cFileName := setExtension(filename, ".c")
+    hFileName := setExtension(filename, ".h")
 
-    f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
+    hf, err := os.OpenFile(hFileName, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
     if nil != err {
-        return "", err
+        return nil, err
     }
-    defer f.Close()
+    defer hf.Close()
 
-    err = cTemplate.Execute(f, fm)
+    err = cTemplate.ExecuteTemplate(hf, "cHeader.tpl", tm)
     if nil != err {
-        return "", err
+        return nil, err
     }
 
-    return filename, nil
+    cf, err := os.OpenFile(cFileName, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
+    if nil != err {
+        return nil, err
+    }
+    defer cf.Close()
+
+    err = cTemplate.Execute(cf, tm)
+    if nil != err {
+        return nil, err
+    }
+
+    return []string{hFileName, cFileName}, nil
 }
 
-func (b *Builder) writeGoFile(fm *transpiler.FileMap) (string, error) {
+func (b *Builder) writeGoType(tm *transpiler.TypeMap) (string, error) {
 
-    filename := path.Join(b.out, path.Base(fm.Name))
+    filename := path.Join(b.out, path.Base(tm.Name))
     filename = setExtension(filename, ".go")
 
     f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
@@ -74,7 +87,7 @@ func (b *Builder) writeGoFile(fm *transpiler.FileMap) (string, error) {
     }
     defer f.Close()
 
-    err = goTemplate.Execute(f, fm)
+    err = goTemplate.Execute(f, tm)
     if nil != err {
         return "", err
     }

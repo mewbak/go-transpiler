@@ -22,7 +22,27 @@ func init() {
         "packagedType":     packagedType,
         "isInternalType":   isInternalType,
         "notLast":          notLast,
+        "externalTypes":    externalTypes,
     }
+}
+
+func externalTypes(fm *transpiler.FileMap, pm *transpiler.PackageMap) []*transpiler.TypeMap {
+    var external []*transpiler.TypeMap
+    for _, extFile := range pm.Files {
+        for _, tm := range extFile.Types {
+            isInt := false
+            for _, internal := range fm.Types {
+                if tm == internal {
+                    isInt = true
+                    break
+                }
+            }
+            if !isInt {
+                external = append(external, tm)
+            }
+        }
+    }
+    return external
 }
 
 func camelToSnake(name string) string {
@@ -65,6 +85,12 @@ func cType(goType string) string {
     case "bool":
         return "char"
 
+    case "time.Time":
+        return "unsigned long"
+
+    case "map[string]interface{}":
+        return "PyDictObject*"
+
     default:
         return "PyObject*"
     }
@@ -85,6 +111,9 @@ func goCType(goType string) string {
 
     case "bool":
         return "C.char"
+
+    case "unsigned long":
+        "time.Time"
 
     default:
         return "*C.PyObject"

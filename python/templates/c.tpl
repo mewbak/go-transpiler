@@ -4,6 +4,10 @@
 #include <Python.h>
 #include "structmember.h"
 
-{{range .Types}}
+{{range .Package.Types}}
+{{- if .Name}}
+#include "{{.Name}}.h"
+{{- end}}
+{{- end}}
+
 {{if .Name}}{{template "cStruct.tpl" .}}{{end}}
-{{end}}

@@ -3,8 +3,10 @@ package transpiler
 // PackageMap maps the information conatined within
 // a go package
 type PackageMap struct {
-    Name  string
-    Files []*FileMap
+    Name      string
+    Files     []*FileMap
+    Types     []*TypeMap
+    Functions []*FunctionMap
 }
 
 // NewPackageMap creates a new package map
@@ -19,4 +21,6 @@ func NewPackageMap(name string) *PackageMap {
 func (pm *PackageMap) AddFile(f *FileMap) {
     f.SetPackage(pm)
     pm.Files = append(pm.Files, f)
+    pm.Types = append(pm.Types, f.Types...)
+    pm.Functions = append(pm.Functions, f.Functions...)
 }
