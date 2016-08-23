@@ -63,6 +63,9 @@ static int
 
 {{- range .NamedMembers}}
     {{cType .Type}} {{.Name}};
+
+    {{- /*create an extra struct pointer for python objects*/}}
+    {{if eq (cType .Type) "PyObject*"}}{{.Name}} *p{{.Name}};{{end}}
 {{- end}}
 
     static char *kwlist[] = {
@@ -73,9 +76,10 @@ static int
     };
 
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwargs, "{{pyArgFormat .NamedMembers}}", kwlist 
+        args, kwargs, "{{pyArgFormat .NamedMembers}}", kwlist
+        {{- if len .NamedMembers}},{{end}} 
         {{- range $i, $_ := .NamedMembers}}
-        &{{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
+        &{{.Name}}{{if eq (cType .Type) "PyObject*"}}, p{{.Name}}{{end}}{{if notLast $i $.NamedMembers}},{{end}}
         {{- end}})) {
         return -1;
     }

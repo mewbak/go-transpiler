@@ -1,4 +1,4 @@
-var cache{{.Name}} = make(map[int64]*{{.Package}}.{{.Name}})
+var cache{{.Name}} = make(map[int64]*{{.Package.Name}}.{{.Name}})
 
 //export create{{.Name}}
 func create{{.Name}}(
@@ -11,7 +11,7 @@ func create{{.Name}}(
     {{- end}}
 ) int64 {
 
-    new{{.Name}} := &{{.Name}}{
+    new{{.Name}} := &{{.Package.Name}}.{{.Name}}{
     {{- if .Members}}
         {{- range .Members}}
             {{- if .Name}}

@@ -14,32 +14,39 @@ import (
 // Builder ...
 type Builder struct {
     out string
-    m   *transpiler.FileMap
+    m   *transpiler.PackageMap
 }
 
 // Build ...
-func (b *Builder) Build(fm *transpiler.FileMap, outDir string) ([]string, error) {
+func (b *Builder) Build(pm *transpiler.PackageMap, outDir string) ([]string, error) {
 
     b.out = outDir
-    b.m = fm
+    b.m = pm
 
-    cfile, err := b.writeCFile()
-    if nil != err {
-        return nil, err
+    var created []string
+
+    for _, fm := range pm.Files {
+
+        cfile, err := b.writeCFile(fm)
+        if nil != err {
+            return nil, err
+        }
+
+        gofile, err := b.writeGoFile(fm)
+        if nil != err {
+            return nil, err
+        }
+
+        created = append(created, cfile, gofile)
     }
 
-    gofile, err := b.writeGoFile()
-    if nil != err {
-        return nil, err
-    }
-
-    return []string{cfile, gofile}, nil
+    return created, nil
 
 }
 
-func (b *Builder) writeCFile() (string, error) {
+func (b *Builder) writeCFile(fm *transpiler.FileMap) (string, error) {
 
-    filename := path.Join(b.out, path.Base(b.m.Name))
+    filename := path.Join(b.out, path.Base(fm.Name))
     filename = setExtension(filename, ".c")
 
     f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
@@ -48,7 +55,7 @@ func (b *Builder) writeCFile() (string, error) {
     }
     defer f.Close()
 
-    err = cTemplate.Execute(f, b.m)
+    err = cTemplate.Execute(f, fm)
     if nil != err {
         return "", err
     }
@@ -56,9 +63,9 @@ func (b *Builder) writeCFile() (string, error) {
     return filename, nil
 }
 
-func (b *Builder) writeGoFile() (string, error) {
+func (b *Builder) writeGoFile(fm *transpiler.FileMap) (string, error) {
 
-    filename := path.Join(b.out, path.Base(b.m.Name))
+    filename := path.Join(b.out, path.Base(fm.Name))
     filename = setExtension(filename, ".go")
 
     f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
@@ -67,7 +74,7 @@ func (b *Builder) writeGoFile() (string, error) {
     }
     defer f.Close()
 
-    err = goTemplate.Execute(f, b.m)
+    err = goTemplate.Execute(f, fm)
     if nil != err {
         return "", err
     }
@@ -76,6 +83,7 @@ func (b *Builder) writeGoFile() (string, error) {
     // run go imports so that we don't have to manage that
     // in the templates
     abs, _ := filepath.Abs(filename)
+    fmt.Println("goimports", "-w", abs)
     cmd := exec.Command("goimports", "-w", abs)
     err = cmd.Run()
     if nil != err {
