@@ -10,8 +10,6 @@ package main
 */
 import "C"
 
-import ()
-
 {{range .Types}}
-{{template "goStruct.tpl" .}}
+{{if .Name}}{{template "goStruct.tpl" .}}{{end}}
 {{end}}

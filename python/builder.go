@@ -71,18 +71,16 @@ func (b *Builder) writeGoFile() (string, error) {
     if nil != err {
         return "", err
     }
+    f.Close()
 
     // run go imports so that we don't have to manage that
     // in the templates
     abs, _ := filepath.Abs(filename)
-    cmd := exec.Command("goimports", abs)
-    //out, _ := cmd.StdoutPipe()
+    cmd := exec.Command("goimports", "-w", abs)
     err = cmd.Run()
-    //cmd.Wait()
     if nil != err {
-        return filename, fmt.Errorf("python transpiler relies on goimports: %s", err)
+        return filename, fmt.Errorf("error calling goimports: %s", err)
     }
-    //io.Copy(f, out)
 
     return filename, nil
 }

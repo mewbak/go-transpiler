@@ -5,5 +5,5 @@
 #include "structmember.h"
 
 {{range .Types}}
-{{template "cStruct.tpl" .}}
+{{if .Name}}{{template "cStruct.tpl" .}}{{end}}
 {{end}}

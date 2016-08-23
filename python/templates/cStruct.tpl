@@ -1,7 +1,10 @@
 // create in go
 extern long long create{{.Name}}(
-{{if .Members}}{{range .Members}}{{if .Name}}
-    {{cType .Type}} {{.Name}},{{end}}{{end}}{{end}}
+{{- if .NamedMembers}}
+    {{- range $i, $_ := .NamedMembers}}
+    {{cType .Type}} {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
+    {{- end}}
+{{- end}}
 );
 
 //free go pointer
@@ -9,16 +12,14 @@ extern void free{{.Name}}(long long elem);
 {{if .IsStruct}}
 typedef struct {
     PyObject_HEAD
-{{range .Members}}{{if .Name}}
+    {{- range .NamedMembers}}
     {{cType .Type}} {{.Name}};
-{{end}}{{end}}
-    long long go{{.Name}}
-
+    {{- end}}
+    long long go{{.Name}};
 } {{.Name}};
-{{end}}
 
-static PyMemberDef {{.Name}}_members[] {
-{{if .Members}}{{range .Members}}{{if .Name}}
+static PyMemberDef {{.Name}}_members[] = {
+{{if .NamedMembers}}{{range .NamedMembers}}
     {
         "{{camelToSnake .Name}}",
         {{pythonMemberType .Type}},
@@ -26,9 +27,9 @@ static PyMemberDef {{.Name}}_members[] {
         0, //members are read only
         "" //TODO docstring generation
     },
-{{end}}{{end}}{{end}}
+{{end}}{{end}}
     {NULL}
-}
+};
 
 static void
 {{.Name}}_dealloc({{.Name}} *self)
@@ -39,14 +40,14 @@ static void
     self->ob_type->tp_free((PyObject*)self);
 }
 
-static void
+static PyObject*
 {{.Name}}_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     {{.Name}} *self;
 
     self = ({{.Name}} *)type->tp_alloc(type, 0);
     if (self != NULL) {
-{{if .Members}}{{range .Members}}{{if eq .Type "string"}}
+{{if .NamedMembers}}{{range .NamedMembers}}{{if eq .Type "string"}}
         self->{{.Name}} = (char*)malloc(sizeof(char));
         memset(self->{{.Name}}, 0, sizeof(char)); //empty string (one null char)
 {{end}}{{end}}{{end}}
@@ -57,41 +58,51 @@ static void
 
 static int
 {{.Name}}_init({{.Name}} *self, PyObject *args, PyObject *kwargs)
-{ {{if .Members}}
-{{range .Members}}{{if .Name}}
-    {{cType .Type}} {{.Name}};{{end}}{{end}}
+{
+{{if .NamedMembers}}
+
+{{- range .NamedMembers}}
+    {{cType .Type}} {{.Name}};
+{{- end}}
 
     static char *kwlist[] = {
-{{range .Members}}{{if .Name}}
-        "{{camelToSnake .Name}}",{{end}}{{end}}
+        {{- range $i, $_ := .NamedMembers}}
+        "{{camelToSnake .Name}}",
+        {{- end}}
         NULL
-    }
+    };
 
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwargs, "{{pyArgFormat .Members}}", kwlist, {{range .Members}}{{if .Name}}
-        &{{.Name}},{{end}}{{end}})) {
+        args, kwargs, "{{pyArgFormat .NamedMembers}}", kwlist 
+        {{- range $i, $_ := .NamedMembers}}
+        &{{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
+        {{- end}})) {
         return -1;
     }
 
-    long long ref = create{{.Name}}({{range .Members}}{{if .Name}}
-        {{.Name}},{{end}}{{end}}
+    long long ref = create{{.Name}}(
+        {{- range $i, $_ := .NamedMembers}}
+        {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
+        {{- end}}
     );
-    if self->go{{.Name}} {
+    if (self->go{{.Name}}) {
         free{{.Name}}(self->go{{.Name}});
     }
     self->go{{.Name}} = ref;
 
-    {{range .Members}}{{if eq .Type "string"}}
+    {{range .NamedMembers}}{{if eq .Type "string"}}
     if (self->{{.Name}} != NULL) {
         free(self->{{.Name}});
     }{{end}}{{end}}
 
     //FIXME free / deal with already set, non-string vars
-    {{range .Members}}{{if .Name}}
-    self->{{.Name}} = {{.Name}};{{end}}{{end}}
+    {{range .NamedMembers}}
+    self->{{.Name}} = {{.Name}};{{end}}
 {{end}}
     return 0;
 }
+
+{{template "cStructFuncs.tpl" .}}
 
 static PyTypeObject {{.Name}}_type = {
   PyObject_HEAD_INIT(NULL)
@@ -122,7 +133,7 @@ static PyTypeObject {{.Name}}_type = {
   0,                         //tp_weaklistoffset
   0,                         //tp_iter
   0,                         //tp_iternext
-  0,                         //tp_methods
+  {{.Name}}_methods,         //tp_methods
   {{.Name}}_members,         //tp_members
   0,                         //tp_getset
   0,                         //tp_base
@@ -134,3 +145,4 @@ static PyTypeObject {{.Name}}_type = {
   0,                         //tp_alloc
   {{.Name}}_new,             //tp_new
 };
+{{end}}

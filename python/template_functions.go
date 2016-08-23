@@ -1,6 +1,7 @@
 package python
 
 import (
+    "reflect"
     "regexp"
     "strings"
     "text/template"
@@ -14,9 +15,13 @@ func init() {
     //template functions
     templateFuncs = template.FuncMap{
         "cType":            cType,
+        "goCType":          goCType,
         "camelToSnake":     camelToSnake,
         "pythonMemberType": pythonMemberType,
         "pyArgFormat":      pyArgFormat,
+        "packagedType":     packagedType,
+        "isInternalType":   isInternalType,
+        "notLast":          notLast,
     }
 }
 
@@ -62,6 +67,27 @@ func cType(goType string) string {
 
     default:
         return "PyObject*"
+    }
+
+}
+
+func goCType(goType string) string {
+
+    switch goType {
+
+    case "string":
+        return "*C.char"
+
+    case "float":
+        fallthrough
+    case "int":
+        return "C." + goType
+
+    case "bool":
+        return "C.char"
+
+    default:
+        return "*C.PyObject"
     }
 
 }
@@ -112,4 +138,76 @@ func pyArgFormat(args []*transpiler.FieldMap) string {
     }
     return res
 
+}
+
+func packagedType(p string, t string) string {
+
+    // if it is already a selector, no need for a package
+    if 1 < len(strings.Split(t, ".")) {
+        return t
+    }
+
+    if isInternalType(t) {
+        return t
+    }
+
+    return p + "." + t
+
+}
+
+var internalTypes = []string{
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+
+    "int",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+
+    "float",
+    "float32",
+    "float64",
+
+    "complex64",
+    "complex128",
+
+    "byte",
+    "rune",
+
+    "string",
+    "bool",
+}
+
+func isInternalType(t string) bool {
+    for _, it := range internalTypes {
+        if t == it || "*"+it == t {
+            return true
+        }
+    }
+    return false
+}
+
+type counter interface {
+    Count() int
+}
+
+func notLast(i int, slice interface{}) bool {
+
+    switch s := slice.(type) {
+    case counter:
+        return i < s.Count()-1
+    }
+
+    switch reflect.TypeOf(slice).Kind() {
+    case reflect.Slice:
+        s := reflect.ValueOf(slice)
+        return i < s.Len()-1
+    case reflect.Ptr:
+        return notLast(i, reflect.ValueOf(slice).Elem())
+    }
+
+    return false
 }
