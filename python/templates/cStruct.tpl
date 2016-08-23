@@ -2,7 +2,7 @@
 extern long long create{{.Name}}(
 {{- if .NamedMembers}}
     {{- range $i, $_ := .NamedMembers}}
-    {{cType .Type}} {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
+    {{cMemberType .Type}} {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
     {{- end}}
 {{- end}}
 );
@@ -14,7 +14,7 @@ static PyMemberDef {{.Name}}_members[] = {
 {{if .NamedMembers}}{{range .NamedMembers}}
     {
         "{{camelToSnake .Name}}",
-        {{pythonMemberType .Type}},
+        {{pyMemberDefType .Type}},
         offsetof({{$.Name}}, {{.Name}}),
         0, //members are read only
         "" //TODO docstring generation
@@ -53,8 +53,8 @@ static int
 {
 {{if .NamedMembers}}
 
-{{- range .NamedMembers}}
-    {{cType .Type}} {{.Name}};
+{{- range $i, $_ := .NamedMembers}}
+    {{pyTupleTarget .Type $i}};
 {{- end}}
 
     static char *kwlist[] = {
@@ -65,11 +65,10 @@ static int
     };
 
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwargs, "{{pyArgFormat .NamedMembers}}", kwlist
+        args, kwargs, "{{pyTupleFormat .NamedMembers}}", kwlist
         {{- if len .NamedMembers}},{{end}} 
         {{- range $i, $_ := .NamedMembers}}
-        {{if eq (cType .Type) "PyObject*"}}&{{.Name}}_type, {{end -}}
-        &{{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
+        {{pyParseTupleArgs .Type $i}}{{if notLast $i $.NamedMembers}},{{end}}
         {{- end}})) {
         return -1;
     }

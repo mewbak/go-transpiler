@@ -14,15 +14,21 @@ var templateFuncs template.FuncMap
 func init() {
     //template functions
     templateFuncs = template.FuncMap{
-        "cType":            cType,
-        "goCType":          goCType,
-        "camelToSnake":     camelToSnake,
-        "pythonMemberType": pythonMemberType,
-        "pyArgFormat":      pyArgFormat,
-        "packagedType":     packagedType,
-        "isInternalType":   isInternalType,
-        "notLast":          notLast,
-        "externalTypes":    externalTypes,
+        "externalTypes": externalTypes,
+        "camelToSnake":  camelToSnake,
+
+        "cMemberType":        cMemberType,
+        "goCFuncArgType":     goCFuncArgType,
+        "convertFromCValue":  convertFromCValue,
+        "convertToCValue":    convertToCValue,
+        "convertFromGoValue": convertFromGoValue,
+        "convertToGoValue":   convertToGoValue,
+        "pyMemberDefType":    pyMemberDefType,
+        "pyTupleTarget":      pyTupleTarget,
+        "pyParseTupleArgs":   pyParseTupleArgs,
+
+        "pyTupleFormat": pyTupleFormat,
+        "notLast":       notLast,
     }
 }
 
@@ -70,153 +76,121 @@ func camelToSnake(name string) string {
 
 }
 
-func cType(goType string) string {
-
-    switch goType {
-
-    case "string":
-        return "char*"
-
-    case "float":
-        fallthrough
-    case "int":
-        return goType
-
-    case "bool":
-        return "char"
-
-    case "time.Time":
-        return "unsigned long"
-
-    case "map[string]interface{}":
-        return "PyDictObject*"
-
-    default:
-        return "PyObject*"
+func getConverter(goType string) converter {
+    if nil == converters[goType] {
+        converters[goType] = NewInternalConverter(goType)
     }
-
+    return converters[goType]
 }
 
-func goCType(goType string) string {
-
-    switch goType {
-
-    case "string":
-        return "*C.char"
-
-    case "float":
-        fallthrough
-    case "int":
-        return "C." + goType
-
-    case "bool":
-        return "C.char"
-
-    case "unsigned long":
-        "time.Time"
-
-    default:
-        return "*C.PyObject"
-    }
-
+func cMemberType(goType string) string {
+    return getConverter(goType).CMemberType()
 }
 
-func pythonMemberType(goType string) string {
-
-    switch goType {
-
-    case "string":
-        return "T_CHAR"
-
-    case "float":
-        fallthrough
-    case "bool":
-        fallthrough
-    case "int":
-        return "T_" + strings.ToUpper(goType)
-
-    default:
-        return "T_OBJECT_EX"
-    }
-
+func goCFuncArgType(goType string) string {
+    return getConverter(goType).GoCFuncArgType()
 }
 
-func pyArgFormat(args []*transpiler.FieldMap) string {
+func convertFromCValue(goType, varName string) string {
+    return getConverter(goType).ConvertFromCValue(varName)
+}
+
+func convertToCValue(goType, varName string) string {
+    return getConverter(goType).ConvertToCValue(varName)
+}
+
+func convertFromGoValue(goType, varName string) string {
+    return getConverter(goType).ConvertFromGoValue(varName)
+}
+
+func convertToGoValue(goType, varName string) string {
+    return getConverter(goType).ConvertToGoValue(varName)
+}
+
+func pyMemberDefType(goType string) string {
+    return getConverter(goType).PyMemberDefTypeEnum()
+}
+
+func pyTupleTarget(goType string, ident int) string {
+    return getConverter(goType).PyTupleTarget(ident)
+}
+
+func pyParseTupleArgs(goType string, ident int) string {
+    return getConverter(goType).PyParseTupleArgs(ident)
+}
+
+func pyArgTuplFormat(goType string) string {
+    return getConverter(goType).PyTupleFormat()
+}
+
+var converters = map[string]converter{
+    "string": &SimpleConverter{
+        Name:         "string",
+        CType:        "char*",
+        GoCType:      "*C.Char",
+        FromC:        "C.GoString(%s)",
+        ToC:          "C.CString(%s)", // BUG(rydrman): this is a memory leak if ownership is not passed to c
+        FromGo:       "%s",
+        ToGo:         "%s",
+        PyMemberType: "T_CHAR",
+        PyTupleFmt:   "s",
+    },
+    "int": &SimpleConverter{
+        Name:         "int",
+        CType:        "int",
+        GoCType:      "int",
+        FromC:        "%s",
+        ToC:          "%s",
+        FromGo:       "%s",
+        ToGo:         "%s",
+        PyMemberType: "T_INT",
+        PyTupleFmt:   "i",
+    },
+    "float": &SimpleConverter{
+        Name:         "float",
+        CType:        "float",
+        GoCType:      "float",
+        FromC:        "%s",
+        ToC:          "%s",
+        FromGo:       "%s",
+        ToGo:         "%s",
+        PyMemberType: "T_FLOAT",
+        PyTupleFmt:   "f",
+    },
+    "bool": &SimpleConverter{
+        Name:         "bool",
+        CType:        "char",
+        GoCType:      "C.char",
+        FromC:        "int(%s) > 0",
+        ToC:          "C.char(%s)",
+        FromGo:       "%s",
+        ToGo:         "%s",
+        PyMemberType: "T_BOOL",
+        PyTupleFmt:   "f",
+    },
+    "time.Time": &SimpleConverter{
+        Name:         "time.Time",
+        CType:        "unsigned long",
+        GoCType:      "int64",
+        FromC:        "time.Unix(%s)",
+        ToC:          "%s.Unix()",
+        FromGo:       "%s",
+        ToGo:         "%s",
+        PyMemberType: "T_INT",
+        PyTupleFmt:   "f",
+    },
+}
+
+func pyTupleFormat(args []*transpiler.FieldMap) string {
 
     res := "|"
     for _, a := range args {
 
-        if a.Name == "" {
-            continue
-        }
+        res += pyArgTuplFormat(a.Name)
 
-        switch a.Type {
-
-        case "string":
-            res += "s"
-
-        case "bool":
-            res += "b"
-
-        case "int":
-            res += "i"
-
-        default:
-            res += "O!" // will check that the incoming pyObj is of the right type
-        }
     }
     return res
 
-}
-
-func packagedType(p string, t string) string {
-
-    // if it is already a selector, no need for a package
-    if 1 < len(strings.Split(t, ".")) {
-        return t
-    }
-
-    if isInternalType(t) {
-        return t
-    }
-
-    return p + "." + t
-
-}
-
-var internalTypes = []string{
-    "uint8",
-    "uint16",
-    "uint32",
-    "uint64",
-
-    "int",
-    "int8",
-    "int16",
-    "int32",
-    "int64",
-
-    "float",
-    "float32",
-    "float64",
-
-    "complex64",
-    "complex128",
-
-    "byte",
-    "rune",
-
-    "string",
-    "bool",
-}
-
-func isInternalType(t string) bool {
-    for _, it := range internalTypes {
-        if t == it || "*"+it == t {
-            return true
-        }
-    }
-    return false
 }
 
 type counter interface {
