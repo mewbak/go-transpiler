@@ -9,6 +9,11 @@ import (
 // FieldListMap ...
 type FieldListMap []*FieldMap
 
+// NewFieldListMap creates an empty field list map
+func NewFieldListMap() *FieldListMap {
+    return &FieldListMap{}
+}
+
 // Visit ...
 func (flm *FieldListMap) Visit(n ast.Node) ast.Visitor {
 
@@ -18,11 +23,11 @@ func (flm *FieldListMap) Visit(n ast.Node) ast.Visitor {
         return flm
 
     case *ast.Field:
-        field := &FieldMap{}
+        field := NewFieldMap()
         if len(node.Names) == 0 {
             field.Unnamed = true
         }
-        (*flm) = append(*flm, field)
+        flm.Add(field)
         return field
 
     case nil:
@@ -36,47 +41,12 @@ func (flm *FieldListMap) Visit(n ast.Node) ast.Visitor {
 
 }
 
-// FieldMap ...
-type FieldMap struct {
-    Name    string
-    Type    string
-    Unnamed bool
-    Pointer bool
+// Add is a shotform to append a FieldMap to this list/slice
+func (flm *FieldListMap) Add(field *FieldMap) {
+    (*flm) = append(*flm, field)
 }
 
-// Visit ...
-func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
-
-    switch node := n.(type) {
-
-    case *ast.StarExpr:
-        fm.Pointer = true
-        fm.Type += "*"
-        return fm
-
-    case *ast.Ident:
-        if "" == fm.Name && !fm.Unnamed {
-            fm.Name = node.String()
-        } else {
-            fm.Type += node.String()
-        }
-        return nil
-
-    case *ast.BasicLit:
-        // often string tags: ie `json:"name"`
-        return nil
-
-    case *ast.SelectorExpr:
-        fm.Type += ExpressionToString(node)
-        return nil
-
-    case nil:
-        return nil
-
-    default:
-        fmt.Printf("FieldMap unhandled %s\n", reflect.TypeOf(n))
-        return nil
-
-    }
-
+// Count is a shotform to get the length of this list
+func (flm *FieldListMap) Count() int {
+    return len(*flm)
 }

@@ -20,9 +20,39 @@ type TypeMap struct {
     // a struct or interface type
     Members *FieldListMap
 
+    // Named members is populated with only members
+    // that have proper field names in this type
+    NamedMembers *FieldListMap
+
+    // Package is the name of the package that this
+    // type belongs too (set by the calling FileMap)
+    Package string
+
+    // Functions is a list of functions that this type
+    // is a reciever for (populated by the calling FileMap)
+    Functions []*FunctionMap
+
+    // IsInterface is set to true when this type
+    // defines an interface
     IsInterface bool
 
+    // IsStruct is set to true when this type
+    // defines a struct type
     IsStruct bool
+}
+
+// NewTypeMap Create a new TypeMap with default members
+func NewTypeMap() *TypeMap {
+    return &TypeMap{
+        Name:         "",
+        BaseType:     "",
+        Members:      NewFieldListMap(),
+        NamedMembers: NewFieldListMap(),
+        Package:      "",
+        Functions:    make([]*FunctionMap, 0),
+        IsInterface:  false,
+        IsStruct:     false,
+    }
 }
 
 // Visit ...
@@ -36,7 +66,6 @@ func (tm *TypeMap) Visit(n ast.Node) ast.Visitor {
     case *ast.Ident:
         if tm.Name == "" {
             tm.Name = node.String()
-            fmt.Printf("type %s\n", tm.Name)
         }
         return nil
 
@@ -51,7 +80,7 @@ func (tm *TypeMap) Visit(n ast.Node) ast.Visitor {
         return tm
 
     case *ast.FieldList:
-        tm.Members = &FieldListMap{}
+        tm.Members = NewFieldListMap()
         return tm.Members
 
     case *ast.SelectorExpr:
@@ -68,4 +97,14 @@ func (tm *TypeMap) Visit(n ast.Node) ast.Visitor {
 
     return tm
 
+}
+
+// Finalize ...
+func (tm *TypeMap) Finalize() {
+
+    for _, m := range *tm.Members {
+        if m.Name != "" {
+            tm.NamedMembers.Add(m)
+        }
+    }
 }
