@@ -68,4 +68,5 @@ var converters = map[string]converter{
         PyMemberType: "T_INT",
         PyTupleFmt:   "i",
     },
+    "map[string]interface{}": &DictConverter{},
 }
