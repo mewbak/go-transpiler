@@ -18,7 +18,8 @@ func init() {
         "camelToSnake":  camelToSnake,
 
         "cMemberType":        cMemberType,
-        "goCFuncArgType":     goCFuncArgType,
+        "goIncomingArgType":  goIncomingArgType,
+        "cOutgoingArgType":   cOutgoingArgType,
         "convertFromCValue":  convertFromCValue,
         "convertToCValue":    convertToCValue,
         "convertFromGoValue": convertFromGoValue,
@@ -26,6 +27,7 @@ func init() {
         "pyMemberDefType":    pyMemberDefType,
         "pyTupleTarget":      pyTupleTarget,
         "pyParseTupleArgs":   pyParseTupleArgs,
+        "pyTupleResult":      pyTupleResult,
 
         "pyTupleFormat": pyTupleFormat,
         "notLast":       notLast,
@@ -76,19 +78,16 @@ func camelToSnake(name string) string {
 
 }
 
-func getConverter(goType string) converter {
-    if nil == converters[goType] {
-        converters[goType] = NewInternalConverter(goType)
-    }
-    return converters[goType]
-}
-
 func cMemberType(goType string) string {
     return getConverter(goType).CMemberType()
 }
 
-func goCFuncArgType(goType string) string {
-    return getConverter(goType).GoCFuncArgType()
+func goIncomingArgType(goType string) string {
+    return getConverter(goType).GoIncomingArgType()
+}
+
+func cOutgoingArgType(goType string) string {
+    return getConverter(goType).COutgoingArgType()
 }
 
 func convertFromCValue(goType, varName string) string {
@@ -115,6 +114,10 @@ func pyTupleTarget(goType string, ident int) string {
     return getConverter(goType).PyTupleTarget(ident)
 }
 
+func pyTupleResult(goType string, ident int) string {
+    return getConverter(goType).PyTupleResult(ident)
+}
+
 func pyParseTupleArgs(goType string, ident int) string {
     return getConverter(goType).PyParseTupleArgs(ident)
 }
@@ -123,70 +126,12 @@ func pyArgTuplFormat(goType string) string {
     return getConverter(goType).PyTupleFormat()
 }
 
-var converters = map[string]converter{
-    "string": &SimpleConverter{
-        Name:         "string",
-        CType:        "char*",
-        GoCType:      "*C.Char",
-        FromC:        "C.GoString(%s)",
-        ToC:          "C.CString(%s)", // BUG(rydrman): this is a memory leak if ownership is not passed to c
-        FromGo:       "%s",
-        ToGo:         "%s",
-        PyMemberType: "T_CHAR",
-        PyTupleFmt:   "s",
-    },
-    "int": &SimpleConverter{
-        Name:         "int",
-        CType:        "int",
-        GoCType:      "int",
-        FromC:        "%s",
-        ToC:          "%s",
-        FromGo:       "%s",
-        ToGo:         "%s",
-        PyMemberType: "T_INT",
-        PyTupleFmt:   "i",
-    },
-    "float": &SimpleConverter{
-        Name:         "float",
-        CType:        "float",
-        GoCType:      "float",
-        FromC:        "%s",
-        ToC:          "%s",
-        FromGo:       "%s",
-        ToGo:         "%s",
-        PyMemberType: "T_FLOAT",
-        PyTupleFmt:   "f",
-    },
-    "bool": &SimpleConverter{
-        Name:         "bool",
-        CType:        "char",
-        GoCType:      "C.char",
-        FromC:        "int(%s) > 0",
-        ToC:          "C.char(%s)",
-        FromGo:       "%s",
-        ToGo:         "%s",
-        PyMemberType: "T_BOOL",
-        PyTupleFmt:   "f",
-    },
-    "time.Time": &SimpleConverter{
-        Name:         "time.Time",
-        CType:        "unsigned long",
-        GoCType:      "int64",
-        FromC:        "time.Unix(%s)",
-        ToC:          "%s.Unix()",
-        FromGo:       "%s",
-        ToGo:         "%s",
-        PyMemberType: "T_INT",
-        PyTupleFmt:   "f",
-    },
-}
-
 func pyTupleFormat(args []*transpiler.FieldMap) string {
 
     res := "|"
     for _, a := range args {
 
-        res += pyArgTuplFormat(a.Name)
+        res += pyArgTuplFormat(a.Type)
 
     }
     return res

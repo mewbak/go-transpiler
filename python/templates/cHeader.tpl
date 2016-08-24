@@ -5,8 +5,8 @@
 #include "structmember.h"
 #include "datetime.h"
 
-#ifndef {{.Name}}
-#define {{.Name}}
+#ifndef {{.Name}}_H
+#define {{.Name}}_H
 
 typedef struct {
     PyObject_HEAD

@@ -2,7 +2,7 @@
 extern long long create{{.Name}}(
 {{- if .NamedMembers}}
     {{- range $i, $_ := .NamedMembers}}
-    {{cMemberType .Type}} {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
+    {{cOutgoingArgType .Type}} {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
     {{- end}}
 {{- end}}
 );
@@ -75,7 +75,7 @@ static int
 
     long long ref = create{{.Name}}(
         {{- range $i, $_ := .NamedMembers}}
-        {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
+        {{convertToGoValue .Type (pyTupleResult .Type $i)}}{{if notLast $i $.NamedMembers}},{{end}}
         {{- end}}
     );
     if (self->go{{.Name}}) {
@@ -89,8 +89,8 @@ static int
     }{{end}}{{end}}
 
     //FIXME free / deal with already set, non-string vars
-    {{range .NamedMembers}}
-    self->{{.Name}} = {{.Name}};{{end}}
+    {{range $i, $_ := .NamedMembers}}
+    self->{{.Name}} = {{pyTupleResult .Type $i}};{{end}}
 {{end}}
     return 0;
 }

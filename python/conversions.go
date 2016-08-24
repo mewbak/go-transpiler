@@ -17,9 +17,13 @@ type converter interface {
     // data of a python object
     CMemberType() string
 
-    // GoCFuncArgType returns the argument type that should be used
+    // GoIncomingArgType returns the argument type that should be used
     // on go functions exported to c (usually C.* types)
-    GoCFuncArgType() string
+    GoIncomingArgType() string
+
+    // COutgoingArgType returns the argument type that c should use to
+    // define extern functions exported from go
+    COutgoingArgType() string
 
     // ConvertFromCValue should return valid go code that
     // takes a c representation of this type and converts it
@@ -63,6 +67,9 @@ type converter interface {
     // in order to match what would be returned from PythonTupleTarget
     PyParseTupleArgs(ident int) string
 
+    // PyTupleResult returns the name of the var generated for PyTupleTarget
+    PyTupleResult(ident int) string
+
     // PyTupleFormat returns the set of format character(s) that
     // define this variable type as represented in python tuples
     // ex (int vars would return "i")
@@ -75,6 +82,7 @@ type SimpleConverter struct {
     Name         string
     CType        string
     GoCType      string
+    CGoType      string
     FromC        string
     ToC          string
     FromGo       string
@@ -94,9 +102,14 @@ func (sc *SimpleConverter) CMemberType() string {
     return sc.CType
 }
 
-// GoCFuncArgType returns the GoCType string
-func (sc *SimpleConverter) GoCFuncArgType() string {
+// GoIncomingArgType returns the GoCType string
+func (sc *SimpleConverter) GoIncomingArgType() string {
     return sc.GoCType
+}
+
+// COutgoingArgType returns the CGoType string
+func (sc *SimpleConverter) COutgoingArgType() string {
+    return sc.CGoType
 }
 
 // ConvertFromCValue formats the FromC string
@@ -126,12 +139,17 @@ func (sc *SimpleConverter) PyMemberDefTypeEnum() string {
 
 // PyTupleTarget uses the CType to create the tuple target
 func (sc *SimpleConverter) PyTupleTarget(ident int) string {
-    return fmt.Sprintf("%s %s%s", sc.CType, sc.Name, ident)
+    return fmt.Sprintf("%s %s%d", sc.CType, sc.Name, ident)
 }
 
 // PyParseTupleArgs just returns the same var name as PyTupleTarget
 func (sc *SimpleConverter) PyParseTupleArgs(ident int) string {
-    return fmt.Sprintf("&%s%s", sc.Name, ident)
+    return fmt.Sprintf("&%s%d", sc.Name, ident)
+}
+
+// PyTupleResult returns the name of the var generated for PyTupleTarget
+func (sc *SimpleConverter) PyTupleResult(ident int) string {
+    return fmt.Sprintf("%s%d", sc.Name, ident)
 }
 
 // PyTupleFormat returns the type defined in this struct
@@ -156,15 +174,21 @@ func (ic *InternalConverter) GoType() string {
     return ic.Name
 }
 
-// CMemberType returns long long (int64 key)
+// CMemberType returns PyObject* becuase it should be properly instantiated
 func (ic *InternalConverter) CMemberType() string {
-    return "long long"
+    return "PyObject*"
 }
 
-// GoCFuncArgType returns int64 because it is the key for
+// GoIncomingArgType returns int64 because it is the key for
 // this item in the cache
-func (ic *InternalConverter) GoCFuncArgType() string {
+func (ic *InternalConverter) GoIncomingArgType() string {
     return "int64"
+}
+
+// COutgoingArgType returns long long because it is the key for
+// this item in the cache
+func (ic *InternalConverter) COutgoingArgType() string {
+    return "long long"
 }
 
 // ConvertFromCValue uses cache lookup to get object
@@ -184,13 +208,13 @@ func (ic *InternalConverter) ConvertFromGoValue(varName string) string {
 
 // ConvertToGoValue accesses the cache key from the pyobject
 func (ic *InternalConverter) ConvertToGoValue(varName string) string {
-    return fmt.Sprintf("((%s_type*)%s)->go%s", ic.Name, varName, ic.Name)
+    return fmt.Sprintf("((%s*)%s)->go%s", ic.Name, varName, ic.Name)
 }
 
-// PyMemberDefTypeEnum returns PY_OBJECT_EX because these should
+// PyMemberDefTypeEnum returns T_OBJECT_EX because these should
 // be instantiable python objects
 func (ic *InternalConverter) PyMemberDefTypeEnum() string {
-    return "PY_OBJECT_EX"
+    return "T_OBJECT_EX"
 }
 
 // PyTupleTarget is just a PyObject*
@@ -201,7 +225,12 @@ func (ic *InternalConverter) PyTupleTarget(ident int) string {
 // PyParseTupleArgs returns multiple args because we can leverage
 // python to type-check this one for us
 func (ic *InternalConverter) PyParseTupleArgs(ident int) string {
-    return fmt.Sprintf("&%s_type, %s%d", ic.Name, ic.Name, ident)
+    return fmt.Sprintf("&%s_type, &%s%d", ic.Name, ic.Name, ident)
+}
+
+// PyTupleResult returns the name of the checked var generated for PyTupleTarget
+func (ic *InternalConverter) PyTupleResult(ident int) string {
+    return fmt.Sprintf("%s%d", ic.Name, ident)
 }
 
 // PyTupleFormat returns the type for type-asserted object

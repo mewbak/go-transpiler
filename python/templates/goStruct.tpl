@@ -3,7 +3,7 @@ var cache{{.Name}} = make(map[int64]*{{.Package.Name}}.{{.Name}})
 //export create{{.Name}}
 func create{{.Name}}(
     {{- range .NamedMembers}}
-    {{.Name}} {{goCFuncArgType .Type}},
+    {{.Name}} {{goIncomingArgType .Type}},
     {{- end}}
 ) int64 {
 
