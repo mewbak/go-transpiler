@@ -34,13 +34,13 @@ type TypeMap struct {
     // is a reciever for (populated by the calling FileMap)
     Functions []*FunctionMap
 
-    // IsInterface is set to true when this type
+    // Interface is set to true when this type
     // defines an interface
-    IsInterface bool
+    Interface bool
 
-    // IsStruct is set to true when this type
+    // Struct is set to true when this type
     // defines a struct type
-    IsStruct bool
+    Struct bool
 }
 
 // NewTypeMap Create a new TypeMap with default members
@@ -52,8 +52,8 @@ func NewTypeMap() *TypeMap {
         NamedMembers: NewFieldListMap(),
         Package:      nil,
         Functions:    make([]*FunctionMap, 0),
-        IsInterface:  false,
-        IsStruct:     false,
+        Interface:    false,
+        Struct:       false,
     }
 }
 
@@ -72,13 +72,13 @@ func (tm *TypeMap) Visit(n ast.Node) ast.Visitor {
         return nil
 
     case *ast.InterfaceType:
-        tm.IsInterface = true
-        tm.IsStruct = false
+        tm.Interface = true
+        tm.Struct = false
         return tm
 
     case *ast.StructType:
-        tm.IsInterface = false
-        tm.IsStruct = true
+        tm.Interface = false
+        tm.Struct = true
         return tm
 
     case *ast.FieldList:

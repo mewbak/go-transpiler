@@ -1,3 +1,5 @@
+{{if .Struct -}}
+
 var cache{{.Name}} = make(map[int64]*{{.Package.Name}}.{{.Name}})
 
 //export create{{.Name}}
@@ -17,3 +19,13 @@ func create{{.Name}}(
     cache{{.Name}}[id] = new{{.Name}}
     return id
 }
+
+{{- else if .Interface -}}
+{{- /*interfaces act like regular types for python but have no data*/ -}}
+
+var cache{{.Name}} = make(map[int64]{{.Package.Name}}.{{.Name}})
+
+//export create{{.Name}}
+func create{{.Name}}() int64 { return 0 }
+
+{{- end}}

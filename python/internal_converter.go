@@ -1,6 +1,8 @@
-// InternalConverter is used to convert a type that is
+package python
+
 import "fmt"
 
+// InternalConverter is used to convert a type that is
 // defined within the package that is being transpiled
 type InternalConverter struct {
     Name string
@@ -79,4 +81,19 @@ func (ic *InternalConverter) PyTupleResult(ident int) string {
 // PyTupleFormat returns the type for type-asserted object
 func (ic *InternalConverter) PyTupleFormat() string {
     return "O!"
+}
+
+// CDeclarations returns nothing
+func (ic *InternalConverter) CDeclarations() string {
+    return ""
+}
+
+// CDefinitions returns nothing
+func (ic *InternalConverter) CDefinitions() string {
+    return ""
+}
+
+// GoDefinitions returns nothing
+func (ic *InternalConverter) GoDefinitions() string {
+    return ""
 }

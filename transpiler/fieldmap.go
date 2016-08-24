@@ -36,6 +36,10 @@ type FieldMap struct {
     // eg "string" for map[int]string
     ValueType string
 
+    // Length is only set when Array=true and is the
+    // expression used to denote the lentgth of this array
+    Length string
+
     // These booleans describe the type of field
     Unnamed bool
     Pointer bool
@@ -84,15 +88,26 @@ func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
         return nil
 
     case *ast.MapType:
+        fm.Map = true
         fm.KeyType = ExpressionToString(node.Key)
         fm.ValueType = ExpressionToString(node.Value)
-        fm.Map = true
+        fm.Type = "map[" + fm.KeyType + "]" + fm.ValueType
         return nil
 
     case *ast.SelectorExpr:
         expr := ExpressionToString(node)
         fm.Type += expr
         fm.TypeExpr += expr
+        return nil
+
+    case *ast.ArrayType:
+        if nil == node.Len {
+            fm.Slice = true
+        } else {
+            fm.Array = true
+            fm.Length = ExpressionToString(node.Len)
+        }
+        fm.ValueType = ExpressionToString(node.Elt)
         return nil
 
     case nil:

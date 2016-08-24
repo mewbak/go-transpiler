@@ -1,6 +1,9 @@
 package python
 
 func getConverter(goType string) converter {
+    if "" == goType {
+        panic("empty gotype")
+    }
     if nil == converters[goType] {
         converters[goType] = NewInternalConverter(goType)
     }
@@ -61,12 +64,12 @@ var converters = map[string]converter{
         CType:        "unsigned long",
         GoCType:      "int64",
         CGoType:      "long long",
-        FromC:        "time.Unix(%s)",
+        FromC:        "time.Unix(%s, 0)",
         ToC:          "%s.Unix()",
         FromGo:       "%s",
         ToGo:         "%s",
         PyMemberType: "T_INT",
         PyTupleFmt:   "i",
     },
-    "map[string]interface{}": &DictConverter{},
+    "map[string]interface{}": &MapConverter{},
 }

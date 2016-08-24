@@ -48,9 +48,9 @@ func main() {
         }
     }
 
-    fmt.Printf("\nDone:\n")
-    fmt.Printf(" > %d packages transpiled\n", pkgCount)
-    fmt.Printf(" > %d files transpiled\n", fileCount)
+    fmt.Printf("\nDone Transpiling:\n")
+    fmt.Printf(" > %d packages\n", pkgCount)
+    fmt.Printf(" > %d go files\n", fileCount)
 }
 
 func transpilePackage(packageDir, outDir string) error {
@@ -88,9 +88,9 @@ func transpilePackage(packageDir, outDir string) error {
             fmt.Println(err)
         } else {
             fmt.Printf("wrote %d files:\n", len(output))
-            for _, name := range output {
+            /*for _, name := range output {
                 fmt.Printf("  %s\n", name)
-            }
+            }*/
         }
         pkgCount++
     }
@@ -100,7 +100,7 @@ func transpilePackage(packageDir, outDir string) error {
 
 func transpileFile(filepath string) (*transpiler.FileMap, error) {
 
-    fmt.Printf("> parsing %s...\n", filepath)
+    fmt.Printf("parsing %s...\n", filepath)
     if strings.Contains(filepath, "_test.go") {
         return nil, fmt.Errorf("transpiling tests is not supported")
     }

@@ -1,6 +1,8 @@
-// SimpleConverter is a simple set of
+package python
+
 import "fmt"
 
+// SimpleConverter is a simple set of
 // strings to define a type conversion
 type SimpleConverter struct {
     Name         string
@@ -79,4 +81,19 @@ func (sc *SimpleConverter) PyTupleResult(ident int) string {
 // PyTupleFormat returns the type defined in this struct
 func (sc *SimpleConverter) PyTupleFormat() string {
     return sc.PyTupleFmt
+}
+
+// CDeclarations returns nothing
+func (sc *SimpleConverter) CDeclarations() string {
+    return ""
+}
+
+// CDefinitions returns nothing
+func (sc *SimpleConverter) CDefinitions() string {
+    return ""
+}
+
+// GoDefinitions returns nothing
+func (sc *SimpleConverter) GoDefinitions() string {
+    return ""
 }

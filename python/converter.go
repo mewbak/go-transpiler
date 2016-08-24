@@ -72,4 +72,21 @@ type converter interface {
     // define this variable type as represented in python tuples
     // ex (int vars would return "i")
     PyTupleFormat() string
+
+    // CDeclarations should return decalrations for anything defined in
+    // CDefinitions function. This will be included in the header of all
+    // generated c files
+    CDeclarations() string
+
+    // CDefintions returns any global definitions that should be included
+    // in the conversions.c file. These are utility functions or values
+    // that are needed for this converter (this function will only called
+    // once for each converter implementation)
+    CDefinitions() string
+
+    // GoDefintions returns any global definitions that should be included
+    // in the conversions.go file. These are utility functions or values
+    // that are needed for this converter (this function will only called
+    // once for each converter implementation)
+    GoDefinitions() string
 }
