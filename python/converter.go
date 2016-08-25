@@ -59,26 +59,6 @@ type converter interface {
     // function should function in the brackets of an if statement
     ValidatePyValue(varName string) string
 
-    // PyTupleTarget returns a string that defines target variables
-    // to be used when parsing this varaible type out of a tuple set.
-    // The given identifier string should be appended to variable names
-    // in order to ensure uniqueness
-    PyTupleTarget(ident int) string
-
-    // PyParseTupleArgs returns a string that are arguments
-    // to be passed to tuple argument parding functions in python api.
-    // The given identifier string should be appended to variable names
-    // in order to match what would be returned from PythonTupleTarget
-    PyParseTupleArgs(ident int) string
-
-    // PyTupleResult returns the name of the var generated for PyTupleTarget
-    PyTupleResult(ident int) string
-
-    // PyTupleFormat returns the set of format character(s) that
-    // define this variable type as represented in python tuples
-    // ex (int vars would return "i")
-    PyTupleFormat() string
-
     // CDeclarations should return decalrations for anything defined in
     // CDefinitions function. This will be included in the header of all
     // generated c files

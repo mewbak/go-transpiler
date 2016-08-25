@@ -6,6 +6,7 @@ import (
     "os/exec"
     "path"
     "path/filepath"
+    "reflect"
     "strings"
 
     "github.com/KloudKtrl/go-transpiler/transpiler"
@@ -127,6 +128,24 @@ func (b *Builder) writeGoType(tm *transpiler.TypeMap) (string, error) {
 func (b *Builder) writeModuleFiles() ([]string, error) {
 
     var created []string
+
+    // filter converters to only one of each reflect.Type
+    var cTypes []reflect.Type
+    var convertersUnique []converter
+    for _, cvtr := range converters {
+        cType, found := reflect.TypeOf(cvtr), false
+        for _, t := range cTypes {
+            if t == cType {
+                found = true
+                break
+            }
+        }
+        if !found {
+            convertersUnique = append(convertersUnique, cvtr)
+            cTypes = append(cTypes, cType)
+        }
+    }
+
     cConversions := path.Join(b.out, "type_conversions.c")
 
     cf, err := os.OpenFile(cConversions, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
@@ -135,7 +154,7 @@ func (b *Builder) writeModuleFiles() ([]string, error) {
     }
     defer cf.Close()
 
-    err = cTemplate.ExecuteTemplate(cf, "cConversions.tpl", converters)
+    err = cTemplate.ExecuteTemplate(cf, "cConversions.tpl", convertersUnique)
     if nil != err {
         return created, err
     }
@@ -149,7 +168,7 @@ func (b *Builder) writeModuleFiles() ([]string, error) {
     }
     defer chf.Close()
 
-    err = cTemplate.ExecuteTemplate(chf, "cConversions.h.tpl", converters)
+    err = cTemplate.ExecuteTemplate(chf, "cConversions.h.tpl", convertersUnique)
     if nil != err {
         return created, err
     }
@@ -163,7 +182,7 @@ func (b *Builder) writeModuleFiles() ([]string, error) {
     }
     defer gf.Close()
 
-    err = goTemplate.ExecuteTemplate(gf, "goConversions.tpl", converters)
+    err = goTemplate.ExecuteTemplate(gf, "goConversions.tpl", convertersUnique)
     if nil != err {
         return created, err
     }

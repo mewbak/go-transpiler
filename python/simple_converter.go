@@ -100,5 +100,12 @@ func (sc *SimpleConverter) CDefinitions() string {
 
 // GoDefinitions returns nothing
 func (sc *SimpleConverter) GoDefinitions() string {
-    return ""
+    return `
+func btoi (b bool) int {
+    if b {
+        return 1
+    }
+    return 0
+}
+`
 }

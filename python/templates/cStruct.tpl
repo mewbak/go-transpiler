@@ -50,14 +50,15 @@ static int
     };
 
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwargs, "{{pyTupleFormat .NamedMembers}}", kwlist,
+        args, kwargs, "|{{range .NamedMembers}}O{{end}}", kwlist,
         {{- range $i, $_ := .NamedMembers}}
         &arg{{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
         {{- end}})) {
         return -1;
     }
     {{range .NamedMembers}}
-    if(Py_None != arg{{.Name}} && 0 != {{$.Name}}_Set{{.Name}}(self, arg{{.Name}}, NULL)){
+    if(NULL != arg{{.Name}} &&
+       0 != {{$.Name}}_Set{{.Name}}(self, arg{{.Name}}, NULL)){
         return -1;
     }
     {{- end}}

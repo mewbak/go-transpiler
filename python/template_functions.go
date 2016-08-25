@@ -26,13 +26,9 @@ func init() {
         "convertCToGo":     convertCToGo,
         "convertPyFromC":   convertPyFromC,
         "convertPyToC":     convertPyToC,
-        "pyTupleTarget":    pyTupleTarget,
-        "pyParseTupleArgs": pyParseTupleArgs,
-        "pyTupleResult":    pyTupleResult,
         "validatePyValue":  validatePyValue,
 
-        "pyTupleFormat": pyTupleFormat,
-        "notLast":       notLast,
+        "notLast": notLast,
     }
 }
 
@@ -112,36 +108,8 @@ func convertPyToC(goType, varName string) string {
     return getConverter(goType).ConvertPyToC(varName)
 }
 
-func pyTupleTarget(goType string, ident int) string {
-    return getConverter(goType).PyTupleTarget(ident)
-}
-
-func pyTupleResult(goType string, ident int) string {
-    return getConverter(goType).PyTupleResult(ident)
-}
-
-func pyParseTupleArgs(goType string, ident int) string {
-    return getConverter(goType).PyParseTupleArgs(ident)
-}
-
-func pyArgTuplFormat(goType string) string {
-    return getConverter(goType).PyTupleFormat()
-}
-
 func validatePyValue(goType, varName string) string {
     return getConverter(goType).ValidatePyValue(varName)
-}
-
-func pyTupleFormat(args []*transpiler.FieldMap) string {
-
-    res := "|"
-    for _, a := range args {
-
-        res += pyArgTuplFormat(a.Type)
-
-    }
-    return res
-
 }
 
 type counter interface {
