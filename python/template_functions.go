@@ -16,6 +16,7 @@ func init() {
     templateFuncs = template.FuncMap{
         "externalTypes": externalTypes,
         "camelToSnake":  camelToSnake,
+        "pyModuleName":  func() string { return pyModuleName },
 
         "cMemberType":        cMemberType,
         "goIncomingArgType":  goIncomingArgType,

@@ -11,6 +11,8 @@ import (
     "github.com/KloudKtrl/go-transpiler/transpiler"
 )
 
+var pyModuleName string
+
 // Builder ...
 type Builder struct {
     out string
@@ -18,10 +20,16 @@ type Builder struct {
 }
 
 // Build ...
-func (b *Builder) Build(pm *transpiler.PackageMap, outDir string) ([]string, error) {
+func (b *Builder) Build(pm *transpiler.PackageMap, outDir, name string) ([]string, error) {
 
     b.out = outDir
     b.m = pm
+    pyModuleName = name
+
+    if "" == pyModuleName {
+        return nil, fmt.Errorf(
+            "cannot build module without name")
+    }
 
     var created []string
 
@@ -166,37 +174,53 @@ func (b *Builder) writeModuleFiles() ([]string, error) {
         return created, err
     }
 
-    mainFile, err := b.buildMainFile()
+    mainFiles, err := b.buildMainFiles()
     if nil != err {
         return created, err
     }
-    created = append(created, mainFile)
+    created = append(created, mainFiles...)
 
     return created, nil
 
 }
 
-func (b *Builder) buildMainFile() (string, error) {
+func (b *Builder) buildMainFiles() ([]string, error) {
 
+    var created []string
     filename := path.Join(b.out, "main.go")
 
-    f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
+    gf, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
     if nil != err {
-        return "", err
+        return created, err
     }
-    defer f.Close()
+    defer gf.Close()
+    created = append(created, filename)
 
-    err = goTemplate.ExecuteTemplate(f, "goMain.tpl", b.m)
+    err = goTemplate.ExecuteTemplate(gf, "goMain.tpl", b.m)
     if nil != err {
-        return filename, err
+        return created, err
     }
 
     err = runGoImports(filename)
     if nil != err {
-        return filename, err
+        return created, err
     }
 
-    return filename, nil
+    filename = path.Join(b.out, "main.c")
+
+    cf, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
+    if nil != err {
+        return created, err
+    }
+    defer gf.Close()
+    created = append(created, filename)
+
+    err = cTemplate.ExecuteTemplate(cf, "cMain.tpl", b.m)
+    if nil != err {
+        return created, err
+    }
+
+    return created, nil
 
 }
 

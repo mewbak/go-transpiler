@@ -1,10 +1,11 @@
 // create in go
 extern long long create{{.Name}}(
-{{- if .NamedMembers}}
+{{- if (len .NamedMembers)}}
     {{- range $i, $_ := .NamedMembers}}
     {{cOutgoingArgType .Type}} {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
     {{- end}}
-{{- end}}
+{{- else}}void
+{{- end -}}
 );
 
 //free go pointer
@@ -37,7 +38,7 @@ static PyObject*
 {
     {{.Name}} *self;
 
-    self = ({{.Name}} *)type->tp_alloc(type, 0);
+    self = ({{.Name}}*)type->tp_alloc(type, 0);
     if (self != NULL) {
 {{if .NamedMembers}}{{range .NamedMembers}}{{if eq .Type "string"}}
         self->{{.Name}} = (char*)malloc(sizeof(char));
@@ -76,7 +77,7 @@ static int
     long long ref = create{{.Name}}(
         {{- range $i, $_ := .NamedMembers}}
         {{convertToGoValue .Type (pyTupleResult .Type $i)}}{{if notLast $i $.NamedMembers}},{{end}}
-        {{- end}}
+        {{- end -}}
     );
     if (self->go{{.Name}}) {
         free{{.Name}}(self->go{{.Name}});
@@ -97,7 +98,7 @@ static int
 
 {{template "cStructFuncs.tpl" .}}
 
-static PyTypeObject {{.Name}}_type = {
+PyTypeObject {{.Name}}_type = {
   PyObject_HEAD_INIT(NULL)
   0,                         //ob_size
   "ktrlpy.{{.Name}}",        //tp_name

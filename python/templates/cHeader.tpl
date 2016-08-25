@@ -16,6 +16,6 @@ typedef struct {
     long long go{{.Name}};
 } {{.Name}};
 
-static PyTypeObject {{.Name}}_type;
+extern PyTypeObject {{.Name}}_type;
 
 #endif

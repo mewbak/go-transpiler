@@ -25,9 +25,17 @@ func main() {
     var pkg string
     flag.StringVar(&pkg, "p", "", "used to transpile one or more packages")
 
+    var outName string
+    flag.StringVar(&outName, "n", "", "name of the destination module/package/lib")
+
     var out string
     flag.StringVar(&out, "o", here, "location to output to")
     flag.Parse()
+
+    if "" == outName || "" == pkg {
+        flag.Usage()
+        os.Exit(1)
+    }
 
     out = path.Clean(out)
     err := os.MkdirAll(out, os.ModePerm)
@@ -42,7 +50,7 @@ func main() {
         if pkgPath == "" {
             continue
         }
-        err := transpilePackage(path.Clean(pkgPath), out)
+        err := transpilePackage(path.Clean(pkgPath), out, outName)
         if nil != err {
             fmt.Println(err)
         }
@@ -53,7 +61,7 @@ func main() {
     fmt.Printf(" > %d go files\n", fileCount)
 }
 
-func transpilePackage(packageDir, outDir string) error {
+func transpilePackage(packageDir, outDir, outName string) error {
 
     if _, err := os.Stat(packageDir); os.IsNotExist(err) {
         return fmt.Errorf("package directory does not exist %s", packageDir)
@@ -83,7 +91,7 @@ func transpilePackage(packageDir, outDir string) error {
             }
         }
         pyBuilder := &python.Builder{}
-        output, err := pyBuilder.Build(pkgMap, outDir)
+        output, err := pyBuilder.Build(pkgMap, outDir, outName)
         if nil != err {
             fmt.Println(err)
         } else {
