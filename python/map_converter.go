@@ -6,50 +6,49 @@ import "fmt"
 // to and from python dictionaries
 type MapConverter struct{}
 
-// GoType returns internal type's name
-func (mc *MapConverter) GoType() string {
-    return "map[string]interface{}"
-}
-
-// CMemberType is simply a PyObject* but should be a dictionary
-func (mc *MapConverter) CMemberType() string {
-    return "PyObject*"
-}
-
-// GoIncomingArgType should be the char* to a json string
-func (mc *MapConverter) GoIncomingArgType() string {
+// GoTransitionType should be the char* to a json string
+func (mc *MapConverter) GoTransitionType() string {
     return "*C.char"
 }
 
-// COutgoingArgType returns a char* to a json string
-func (mc *MapConverter) COutgoingArgType() string {
-    return "const char*"
+// CTransitionType returns a char* to a json string
+func (mc *MapConverter) CTransitionType() string {
+    return "char*"
 }
 
-// ConvertFromCValue uses json to unmarshall the string
-func (mc *MapConverter) ConvertFromCValue(varName string) string {
+// ConvertGoFromC uses json to unmarshall the string
+func (mc *MapConverter) ConvertGoFromC(varName string) string {
     return fmt.Sprintf("mapFromJSON(%s)", varName)
 }
 
-// ConvertToCValue uses json to create a string
-func (mc *MapConverter) ConvertToCValue(varName string) string {
+// ConvertGoToC uses json to create a string
+func (mc *MapConverter) ConvertGoToC(varName string) string {
     return fmt.Sprintf("mapToJSON(%s)", varName)
 }
 
-// ConvertFromGoValue uses the python json module to convert to a PyDictObject*
-func (mc *MapConverter) ConvertFromGoValue(varName string) string {
+// ConvertCFromGo no conversion necessary here
+func (mc *MapConverter) ConvertCFromGo(varName string) string {
+    return fmt.Sprintf("%s", varName)
+}
+
+// ConvertCToGo no conversion necessary here
+func (mc *MapConverter) ConvertCToGo(varName string) string {
+    return fmt.Sprintf("%s", varName)
+}
+
+// ConvertPyFromC parses a c string to dict with the utility function
+func (mc *MapConverter) ConvertPyFromC(varName string) string {
     return fmt.Sprintf("ParseMapJSON(%s)", varName)
 }
 
-// ConvertToGoValue uses the python json module to convert to a string
-func (mc *MapConverter) ConvertToGoValue(varName string) string {
+// ConvertPyToC uses the utility function to create a string from dict
+func (mc *MapConverter) ConvertPyToC(varName string) string {
     return fmt.Sprintf("DictToJSON(%s)", varName)
 }
 
-// PyMemberDefTypeEnum returns T_OBJECT_EX because these should
-// be instantiable python objects
-func (mc *MapConverter) PyMemberDefTypeEnum() string {
-    return "T_OBJECT_EX"
+// ValidatePyValue checks that the PyObject* is a dictionary
+func (mc *MapConverter) ValidatePyValue(varName string) string {
+    return fmt.Sprintf("PyDict_Check(%s)", varName)
 }
 
 // PyTupleTarget is just a PyObject*
@@ -77,7 +76,7 @@ func (mc *MapConverter) PyTupleFormat() string {
 func (mc *MapConverter) CDeclarations() string {
     return `
 PyObject* ParseMapJSON(char *json);
-const char* DictToJSON(PyObject *dict);
+char* DictToJSON(PyObject *dict);
 `
 }
 
@@ -93,10 +92,11 @@ ParseMapJSON(char *json)
     PyObject *result = PyEval_CallObject(loadsFunc, argList);
     Py_DECREF(loadsFunc);
     Py_DECREF(argList);
+    free(json);
     return result;
 }
 
-const char*
+char*
 DictToJSON(PyObject *dict) 
 {
     if (!PyDict_Check(dict)) {
@@ -110,8 +110,9 @@ DictToJSON(PyObject *dict)
     Py_DECREF(dumpsFunc);
     Py_DECREF(argList);
     const char* str = PyString_AsString(result);
+    char *mine = (char*)malloc(strlen(str)+1);
     Py_DECREF(result);
-    return str;
+    return strcpy(mine, str);
 }
 `
 }
@@ -120,6 +121,7 @@ DictToJSON(PyObject *dict)
 func (mc *MapConverter) GoDefinitions() string {
     return `
 func mapFromJSON(jsonStr *C.char) map[string]interface{} {
+    defer C.free(unsafe.Pointer(jsonStr))
     m := make(map[string]interface{})
     err := json.Unmarshal([]byte(C.GoString(jsonStr)), m)
     if err != nil {
@@ -130,15 +132,15 @@ func mapFromJSON(jsonStr *C.char) map[string]interface{} {
     return m
 }
 
-func mapToJSON(m map[string]interface{}) string {
+func mapToJSON(m map[string]interface{}) *C.char {
     bytes, err := json.Marshal(m)
     if err != nil {
         str := C.CString(err.Error())
         defer C.free(unsafe.Pointer(str))
         C.PyErr_SetString(C.PyExc_RuntimeError, str)
-        return "{}"
+        return C.CString("{}")
     }
-    return string(bytes)
+    return C.CString(string(bytes))
 }
 `
 }

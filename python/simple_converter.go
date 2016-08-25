@@ -5,17 +5,17 @@ import "fmt"
 // SimpleConverter is a simple set of
 // strings to define a type conversion
 type SimpleConverter struct {
-    Name         string
-    CType        string
-    GoCType      string
-    CGoType      string
-    FromC        string
-    ToC          string
-    FromGo       string
-    ToGo         string
-    GoConversion string
-    PyMemberType string
-    PyTupleFmt   string
+    Name       string
+    GoTType    string
+    CTType     string
+    GoFromC    string
+    GoToC      string
+    CFromGo    string
+    CToGo      string
+    PyToC      string
+    PyFromC    string
+    PyValidate string
+    PyTupleFmt string
 }
 
 // GoType returns internal type's name
@@ -23,49 +23,54 @@ func (sc *SimpleConverter) GoType() string {
     return sc.Name
 }
 
-// CMemberType returns the CType string
-func (sc *SimpleConverter) CMemberType() string {
-    return sc.CType
+// GoTransitionType returns the GoTType string
+func (sc *SimpleConverter) GoTransitionType() string {
+    return sc.GoTType
 }
 
-// GoIncomingArgType returns the GoCType string
-func (sc *SimpleConverter) GoIncomingArgType() string {
-    return sc.GoCType
+// CTransitionType returns the CTType string
+func (sc *SimpleConverter) CTransitionType() string {
+    return sc.CTType
 }
 
-// COutgoingArgType returns the CGoType string
-func (sc *SimpleConverter) COutgoingArgType() string {
-    return sc.CGoType
+// ConvertGoFromC formats the FromC string
+func (sc *SimpleConverter) ConvertGoFromC(varName string) string {
+    return fmt.Sprintf(sc.GoFromC, varName)
 }
 
-// ConvertFromCValue formats the FromC string
-func (sc *SimpleConverter) ConvertFromCValue(varName string) string {
-    return fmt.Sprintf(sc.FromC, varName)
+// ConvertGoToC formats the ToC string
+func (sc *SimpleConverter) ConvertGoToC(varName string) string {
+    return fmt.Sprintf(sc.GoToC, varName)
 }
 
-// ConvertToCValue formats the ToC string
-func (sc *SimpleConverter) ConvertToCValue(varName string) string {
-    return fmt.Sprintf(sc.ToC, varName)
+// ConvertCFromGo formats the FromGo string
+func (sc *SimpleConverter) ConvertCFromGo(varName string) string {
+    return fmt.Sprintf(sc.CFromGo, varName)
 }
 
-// ConvertFromGoValue formats the FromGo string
-func (sc *SimpleConverter) ConvertFromGoValue(varName string) string {
-    return fmt.Sprintf(sc.FromGo, varName)
+// ConvertCToGo formats the ToGo string
+func (sc *SimpleConverter) ConvertCToGo(varName string) string {
+    return fmt.Sprintf(sc.CToGo, varName)
 }
 
-// ConvertToGoValue formats the ToGo string
-func (sc *SimpleConverter) ConvertToGoValue(varName string) string {
-    return fmt.Sprintf(sc.ToGo, varName)
+// ConvertPyFromC formats the PyFromC with varName
+func (sc *SimpleConverter) ConvertPyFromC(varName string) string {
+    return fmt.Sprintf(sc.PyFromC, varName)
 }
 
-// PyMemberDefTypeEnum returns the PyMemberType string
-func (sc *SimpleConverter) PyMemberDefTypeEnum() string {
-    return sc.PyMemberType
+// ConvertPyToC formats PyTpC with the varName
+func (sc *SimpleConverter) ConvertPyToC(varName string) string {
+    return fmt.Sprintf(sc.PyToC, varName)
 }
 
-// PyTupleTarget uses the CType to create the tuple target
+// ValidatePyValue formats the PyValidate string
+func (sc *SimpleConverter) ValidatePyValue(varName string) string {
+    return fmt.Sprintf(sc.PyValidate, varName)
+}
+
+// PyTupleTarget uses the CTranstitionType to create the tuple target
 func (sc *SimpleConverter) PyTupleTarget(ident int) string {
-    return fmt.Sprintf("%s %s%d", sc.CType, sc.Name, ident)
+    return fmt.Sprintf("%s %s%d", sc.CTType, sc.Name, ident)
 }
 
 // PyParseTupleArgs just returns the same var name as PyTupleTarget

@@ -11,7 +11,6 @@
 typedef struct {
     PyObject_HEAD
     {{- range .NamedMembers}}
-    {{cMemberType .Type}} {{.Name}};
     {{- end}}
     long long go{{.Name}};
 } {{.Name}};

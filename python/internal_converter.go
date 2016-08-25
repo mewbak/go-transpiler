@@ -19,47 +19,51 @@ func (ic *InternalConverter) GoType() string {
     return ic.Name
 }
 
-// CMemberType returns PyObject* becuase it should be properly instantiated
-func (ic *InternalConverter) CMemberType() string {
-    return "PyObject*"
-}
-
-// GoIncomingArgType returns int64 because it is the key for
+// GoTransitionType returns int64 because it is the key for
 // this item in the cache
-func (ic *InternalConverter) GoIncomingArgType() string {
+func (ic *InternalConverter) GoTransitionType() string {
     return "int64"
 }
 
-// COutgoingArgType returns long long because it is the key for
+// CTransitionType returns long long because it is the key for
 // this item in the cache
-func (ic *InternalConverter) COutgoingArgType() string {
+func (ic *InternalConverter) CTransitionType() string {
     return "long long"
 }
 
-// ConvertFromCValue uses cache lookup to get object
-func (ic *InternalConverter) ConvertFromCValue(varName string) string {
+// ConvertGoFromC uses cache lookup to get object
+func (ic *InternalConverter) ConvertGoFromC(varName string) string {
     return fmt.Sprintf("cache%s[%s]", ic.Name, varName)
 }
 
-// ConvertToCValue uses cache to set object
-func (ic *InternalConverter) ConvertToCValue(varName string) string {
+// ConvertGoToC uses cache to set object
+func (ic *InternalConverter) ConvertGoToC(varName string) string {
     return fmt.Sprintf("getCached%s(%s)", ic.Name, varName)
 }
 
-// ConvertFromGoValue is a simple assigment of the long long from go
-func (ic *InternalConverter) ConvertFromGoValue(varName string) string {
+// ConvertCFromGo is a simple assigment of the long long from go
+func (ic *InternalConverter) ConvertCFromGo(varName string) string {
     return fmt.Sprintf("%s", varName)
 }
 
-// ConvertToGoValue accesses the cache key from the pyobject
-func (ic *InternalConverter) ConvertToGoValue(varName string) string {
+// ConvertCToGo just passes the vanilla long long value
+func (ic *InternalConverter) ConvertCToGo(varName string) string {
+    return fmt.Sprintf("%s", varName)
+}
+
+// ConvertPyFromC ...TODO... his should create a valid item
+func (ic *InternalConverter) ConvertPyFromC(varName string) string {
+    return fmt.Sprintf("NULL")
+}
+
+// ConvertPyToC accesses the cache key for this object
+func (ic *InternalConverter) ConvertPyToC(varName string) string {
     return fmt.Sprintf("((%s*)%s)->go%s", ic.Name, varName, ic.Name)
 }
 
-// PyMemberDefTypeEnum returns T_OBJECT_EX because these should
-// be instantiable python objects
-func (ic *InternalConverter) PyMemberDefTypeEnum() string {
-    return "T_OBJECT_EX"
+// ValidatePyValue checks that the given var is of the right type
+func (ic *InternalConverter) ValidatePyValue(varName string) string {
+    return fmt.Sprintf("PyObject_TypeCheck(%s, &%s_type)", varName, ic.Name)
 }
 
 // PyTupleTarget is just a PyObject*

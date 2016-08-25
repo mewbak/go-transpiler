@@ -2,18 +2,21 @@
 
 var cache{{.Name}} = make(map[int64]*{{.Package.Name}}.{{.Name}})
 
-//export create{{.Name}}
-func create{{.Name}}(
-    {{- range .NamedMembers}}
-    {{.Name}} {{goIncomingArgType .Type}},
-    {{- end}}
-) int64 {
-
-    new{{.Name}} := &{{.Package.Name}}.{{.Name}}{
-        {{- range .NamedMembers}}
-        {{.Name}}: {{convertFromCValue .Type .Name}},
-        {{- end}}
+func getCached{{.Name}}(item *{{.Package.Name}}.{{.Name}}) int64 {
+    for key, cached := range cache{{.Name}} {
+        if cached == item {
+            return key
+        }
     }
+    id := time.Now().Unix()
+    cache{{.Name}}[id] = item
+    return id
+}
+
+//export create{{.Name}}
+func create{{.Name}}() int64 {
+
+    new{{.Name}} := &{{.Package.Name}}.{{.Name}}{}
 
     id := time.Now().Unix()
     cache{{.Name}}[id] = new{{.Name}}
@@ -25,10 +28,16 @@ func free{{.Name}}(ref int64) {
     delete(cache{{.Name}}, ref)
 }
 
+{{template "goGetSet.tpl" .}}
+
 {{- else -}}{{/*if .Interface*/}}
 {{- /*interfaces act like regular types for python but have no data*/ -}}
 
 var cache{{.Name}} = make(map[int64]{{.Package.Name}}.{{.Name}})
+
+func getCached{{.Name}}(item {{.Package.Name}}.{{.Name}}) int64 {
+    return 0
+}
 
 //export create{{.Name}}
 func create{{.Name}}() int64 { return 0 }

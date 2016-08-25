@@ -7,33 +7,27 @@ type converter interface {
 
     // GoType should return the name of the go type
     // that this converter is representing
-    GoType() string
+    //GoType() string
 
-    // CMemberType should return the c type name
-    // for this converters go type. This is the type of variable
-    // that should be stored in a c struct to define the underlying
-    // data of a python object
-    CMemberType() string
-
-    // GoIncomingArgType returns the argument type that should be used
+    // GoTransitionType returns the argument type that should be used
     // on go functions exported to c (usually C.* types)
-    GoIncomingArgType() string
+    GoTransitionType() string
 
-    // COutgoingArgType returns the argument type that c should use to
+    // CTransitionType returns the return value type that c should use to
     // define extern functions exported from go
-    COutgoingArgType() string
+    CTransitionType() string
 
-    // ConvertFromCValue should return valid go code that
+    // ConvertGoFromC should return valid go code that
     // takes a c representation of this type and converts it
     // back to go code. The result of this function should be assignable
-    ConvertFromCValue(varName string) string
+    ConvertGoFromC(varName string) string
 
-    // ConvertToCValue should return valid go code that
+    // ConvertGoToC should return valid go code that
     // takes a go representation of this type and converts it
     // to c code. The result of this function should be assignable
-    ConvertToCValue(varName string) string
+    ConvertGoToC(varName string) string
 
-    // ConvertFromGoValue should return valid C code that
+    // ConvertCFromGo should return valid C code that
     // takes a go representation of this type and converts it
     // back to c code. The result of this function should be assignable
     //
@@ -41,17 +35,29 @@ type converter interface {
     // conversions through caches, this should
     // usually be a straight assignment or simple lookup, not
     // creating new data
-    ConvertFromGoValue(varName string) string
+    ConvertCFromGo(varName string) string
 
-    // ConvertToGoValue should return valid c code that
+    // ConvertCToGo should return valid c code that
     // takes a c representation of this type and converts it
     // to the type expected by go code. The result of this function
     // should be assignable
-    ConvertToGoValue(varName string) string
+    ConvertCToGo(varName string) string
 
-    // PyMemberDefTypeEnum returns the python enum that properly
-    // describes this type in a member definition (eg PY_OBJECT_EX)
-    PyMemberDefTypeEnum() string
+    // ConvertPyFromC should return valid C code that
+    // takes a PyObject* representation of this type and converts it
+    // to a c-type. The result of this function should be assignable
+    ConvertPyFromC(varName string) string
+
+    // ConvertPyToC should return valid c code that
+    // takes a c representation of this type and converts it
+    // to a valid PyObject*. The result of this function
+    // should be assignable
+    ConvertPyToC(varName string) string
+
+    // ValidatePyValue produces c code that ensures a PyObject*
+    // is of the correct type for assignment. The result of this
+    // function should function in the brackets of an if statement
+    ValidatePyValue(varName string) string
 
     // PyTupleTarget returns a string that defines target variables
     // to be used when parsing this varaible type out of a tuple set.

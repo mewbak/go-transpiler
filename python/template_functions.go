@@ -18,17 +18,18 @@ func init() {
         "camelToSnake":  camelToSnake,
         "pyModuleName":  func() string { return pyModuleName },
 
-        "cMemberType":        cMemberType,
-        "goIncomingArgType":  goIncomingArgType,
-        "cOutgoingArgType":   cOutgoingArgType,
-        "convertFromCValue":  convertFromCValue,
-        "convertToCValue":    convertToCValue,
-        "convertFromGoValue": convertFromGoValue,
-        "convertToGoValue":   convertToGoValue,
-        "pyMemberDefType":    pyMemberDefType,
-        "pyTupleTarget":      pyTupleTarget,
-        "pyParseTupleArgs":   pyParseTupleArgs,
-        "pyTupleResult":      pyTupleResult,
+        "goTransitionType": goTransitionType,
+        "cTransitionType":  cTransitionType,
+        "convertGoFromC":   convertGoFromC,
+        "convertGoToC":     convertGoToC,
+        "convertCFromGo":   convertCFromGo,
+        "convertCToGo":     convertCToGo,
+        "convertPyFromC":   convertPyFromC,
+        "convertPyToC":     convertPyToC,
+        "pyTupleTarget":    pyTupleTarget,
+        "pyParseTupleArgs": pyParseTupleArgs,
+        "pyTupleResult":    pyTupleResult,
+        "validatePyValue":  validatePyValue,
 
         "pyTupleFormat": pyTupleFormat,
         "notLast":       notLast,
@@ -79,36 +80,36 @@ func camelToSnake(name string) string {
 
 }
 
-func cMemberType(goType string) string {
-    return getConverter(goType).CMemberType()
+func goTransitionType(goType string) string {
+    return getConverter(goType).GoTransitionType()
 }
 
-func goIncomingArgType(goType string) string {
-    return getConverter(goType).GoIncomingArgType()
+func cTransitionType(goType string) string {
+    return getConverter(goType).CTransitionType()
 }
 
-func cOutgoingArgType(goType string) string {
-    return getConverter(goType).COutgoingArgType()
+func convertGoFromC(goType, varName string) string {
+    return getConverter(goType).ConvertGoFromC(varName)
 }
 
-func convertFromCValue(goType, varName string) string {
-    return getConverter(goType).ConvertFromCValue(varName)
+func convertGoToC(goType, varName string) string {
+    return getConverter(goType).ConvertGoToC(varName)
 }
 
-func convertToCValue(goType, varName string) string {
-    return getConverter(goType).ConvertToCValue(varName)
+func convertCFromGo(goType, varName string) string {
+    return getConverter(goType).ConvertCFromGo(varName)
 }
 
-func convertFromGoValue(goType, varName string) string {
-    return getConverter(goType).ConvertFromGoValue(varName)
+func convertCToGo(goType, varName string) string {
+    return getConverter(goType).ConvertCToGo(varName)
 }
 
-func convertToGoValue(goType, varName string) string {
-    return getConverter(goType).ConvertToGoValue(varName)
+func convertPyFromC(goType, varName string) string {
+    return getConverter(goType).ConvertPyFromC(varName)
 }
 
-func pyMemberDefType(goType string) string {
-    return getConverter(goType).PyMemberDefTypeEnum()
+func convertPyToC(goType, varName string) string {
+    return getConverter(goType).ConvertPyToC(varName)
 }
 
 func pyTupleTarget(goType string, ident int) string {
@@ -125,6 +126,10 @@ func pyParseTupleArgs(goType string, ident int) string {
 
 func pyArgTuplFormat(goType string) string {
     return getConverter(goType).PyTupleFormat()
+}
+
+func validatePyValue(goType, varName string) string {
+    return getConverter(goType).ValidatePyValue(varName)
 }
 
 func pyTupleFormat(args []*transpiler.FieldMap) string {

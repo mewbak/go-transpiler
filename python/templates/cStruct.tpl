@@ -1,28 +1,15 @@
 // create in go
-extern long long create{{.Name}}(
-{{- if (len .NamedMembers)}}
-    {{- range $i, $_ := .NamedMembers}}
-    {{cOutgoingArgType .Type}} {{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
-    {{- end}}
-{{- else}}void
-{{- end -}}
-);
+extern long long create{{.Name}}(void);
 
 //free go pointer
 extern void free{{.Name}}(long long elem);
 
+// no members are defined as we use getters and setters
 static PyMemberDef {{.Name}}_members[] = {
-{{if .NamedMembers}}{{range .NamedMembers}}
-    {
-        "{{camelToSnake .Name}}",
-        {{pyMemberDefType .Type}},
-        offsetof({{$.Name}}, {{.Name}}),
-        0, //members are read only
-        "" //TODO docstring generation
-    },
-{{end}}{{end}}
     {NULL}
 };
+
+{{template "cGetSet.tpl" .}}
 
 static void
 {{.Name}}_dealloc({{.Name}} *self)
@@ -40,10 +27,7 @@ static PyObject*
 
     self = ({{.Name}}*)type->tp_alloc(type, 0);
     if (self != NULL) {
-{{if .NamedMembers}}{{range .NamedMembers}}{{if eq .Type "string"}}
-        self->{{.Name}} = (char*)malloc(sizeof(char));
-        memset(self->{{.Name}}, 0, sizeof(char)); //empty string (one null char)
-{{end}}{{end}}{{end}}
+      self->go{{.Name}} = create{{.Name}}();
     }
 
     return (PyObject *)self;
@@ -52,11 +36,11 @@ static PyObject*
 static int
 {{.Name}}_init({{.Name}} *self, PyObject *args, PyObject *kwargs)
 {
-{{if .NamedMembers}}
+{{if (len .NamedMembers)}}
 
-{{- range $i, $_ := .NamedMembers}}
-    {{pyTupleTarget .Type $i}};
-{{- end}}
+    {{- range $i, $_ := .NamedMembers}}
+    PyObject* arg{{.Name}} = NULL;
+    {{- end}}
 
     static char *kwlist[] = {
         {{- range $i, $_ := .NamedMembers}}
@@ -66,33 +50,19 @@ static int
     };
 
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwargs, "{{pyTupleFormat .NamedMembers}}", kwlist
-        {{- if len .NamedMembers}},{{end}} 
+        args, kwargs, "{{pyTupleFormat .NamedMembers}}", kwlist,
         {{- range $i, $_ := .NamedMembers}}
-        {{pyParseTupleArgs .Type $i}}{{if notLast $i $.NamedMembers}},{{end}}
+        &arg{{.Name}}{{if notLast $i $.NamedMembers}},{{end}}
         {{- end}})) {
         return -1;
     }
-
-    long long ref = create{{.Name}}(
-        {{- range $i, $_ := .NamedMembers}}
-        {{convertToGoValue .Type (pyTupleResult .Type $i)}}{{if notLast $i $.NamedMembers}},{{end}}
-        {{- end -}}
-    );
-    if (self->go{{.Name}}) {
-        free{{.Name}}(self->go{{.Name}});
+    {{range .NamedMembers}}
+    if(Py_None != arg{{.Name}} && 0 != {{$.Name}}_Set{{.Name}}(self, arg{{.Name}}, NULL)){
+        return -1;
     }
-    self->go{{.Name}} = ref;
+    {{- end}}
+{{- end}}
 
-    {{range .NamedMembers}}{{if eq .Type "string"}}
-    if (self->{{.Name}} != NULL) {
-        free(self->{{.Name}});
-    }{{end}}{{end}}
-
-    //FIXME free / deal with already set, non-string vars
-    {{range $i, $_ := .NamedMembers}}
-    self->{{.Name}} = {{pyTupleResult .Type $i}};{{end}}
-{{end}}
     return 0;
 }
 
@@ -129,7 +99,7 @@ PyTypeObject {{.Name}}_type = {
   0,                         //tp_iternext
   {{.Name}}_methods,         //tp_methods
   {{.Name}}_members,         //tp_members
-  0,                         //tp_getset
+  {{.Name}}_getseters,       //tp_getset
   0,                         //tp_base
   0,                         //tp_dict
   0,                         //tp_descr_get
