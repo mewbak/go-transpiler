@@ -108,10 +108,10 @@ func transpilePackage(packageDir, outDir, outName string) error {
 
 func transpileFile(filepath string) (*transpiler.FileMap, error) {
 
-    fmt.Printf("parsing %s...\n", filepath)
     if strings.Contains(filepath, "_test.go") {
-        return nil, fmt.Errorf("transpiling tests is not supported")
+        return nil, fmt.Errorf("skipping test %s", filepath)
     }
+    fmt.Printf("parsing %s...\n", filepath)
 
     fileSet := token.NewFileSet()
     file, err := parser.ParseFile(fileSet, filepath, nil, 0)

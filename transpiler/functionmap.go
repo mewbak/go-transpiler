@@ -92,4 +92,10 @@ func (fm *FunctionMap) Finalize() {
     if nil == fm.Results {
         fm.Results = NewFieldListMap()
     }
+
+    fmt.Println("\nFUNC: ", fm.Name)
+    fmt.Println(fm.Reciever.Type)
+    for _, r := range *fm.receiverMap {
+        fmt.Println(r.Name, r.Type)
+    }
 }

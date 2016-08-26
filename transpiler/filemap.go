@@ -97,7 +97,7 @@ func (fm *FileMap) Finalize() {
 
         t := f.Reciever.TypeName
         if fm.TypesByName[t] != nil {
-
+            fmt.Printf("match %s to %s type\n", f.Name, f.Reciever.TypeName)
             fm.TypesByName[t].Functions = append(
                 fm.TypesByName[t].Functions, f)
 
