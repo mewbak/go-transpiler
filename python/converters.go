@@ -23,7 +23,6 @@ var converters = map[string]converter{
         PyToC:      "PyString_AsString(%s)",
         PyFromC:    "PyString_FromString(%s)",
         PyValidate: "PyString_Check(%s)",
-        PyTupleFmt: "O",
     },
     "int": &SimpleConverter{
         Name:       "int",
@@ -36,7 +35,6 @@ var converters = map[string]converter{
         PyToC:      "PyInt_AsLong(%s)",
         PyFromC:    "PyInt_FromLong(%s)",
         PyValidate: "PyInt_Check(%s)",
-        PyTupleFmt: "O",
     },
     "float": &SimpleConverter{
         Name:       "float",
@@ -49,7 +47,6 @@ var converters = map[string]converter{
         PyToC:      "PyFloat_ASDouble(%s)",
         PyFromC:    "PyFloat_FromDouble(%s)",
         PyValidate: "PyFloat_Check(%s)",
-        PyTupleFmt: "O",
     },
     "bool": &SimpleConverter{
         Name:       "bool",
@@ -62,20 +59,7 @@ var converters = map[string]converter{
         PyToC:      "%s == Py_True",
         PyFromC:    "%s == 0 ? Py_False : Py_True",
         PyValidate: "PyBool_Check(%s)",
-        PyTupleFmt: "O",
     },
-    "time.Time": &SimpleConverter{
-        Name:       "Time",
-        GoTType:    "int64",
-        CTType:     "long long",
-        GoFromC:    "time.Unix(%s, 0)",
-        GoToC:      "%s.Unix()",
-        CFromGo:    "%s",
-        CToGo:      "%s",
-        PyToC:      "0; //%s",    //FIXME
-        PyFromC:    "NULL; //%s", //FIXME
-        PyValidate: "PyDate_Check(%s)",
-        PyTupleFmt: "O",
-    },
+    "time.Time":              &DateConverter{},
     "map[string]interface{}": &MapConverter{},
 }

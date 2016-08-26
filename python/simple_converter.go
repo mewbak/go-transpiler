@@ -68,26 +68,6 @@ func (sc *SimpleConverter) ValidatePyValue(varName string) string {
     return fmt.Sprintf(sc.PyValidate, varName)
 }
 
-// PyTupleTarget uses the CTranstitionType to create the tuple target
-func (sc *SimpleConverter) PyTupleTarget(ident int) string {
-    return fmt.Sprintf("%s %s%d", sc.CTType, sc.Name, ident)
-}
-
-// PyParseTupleArgs just returns the same var name as PyTupleTarget
-func (sc *SimpleConverter) PyParseTupleArgs(ident int) string {
-    return fmt.Sprintf("&%s%d", sc.Name, ident)
-}
-
-// PyTupleResult returns the name of the var generated for PyTupleTarget
-func (sc *SimpleConverter) PyTupleResult(ident int) string {
-    return fmt.Sprintf("%s%d", sc.Name, ident)
-}
-
-// PyTupleFormat returns the type defined in this struct
-func (sc *SimpleConverter) PyTupleFormat() string {
-    return sc.PyTupleFmt
-}
-
 // CDeclarations returns nothing
 func (sc *SimpleConverter) CDeclarations() string {
     return ""

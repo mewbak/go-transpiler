@@ -51,27 +51,6 @@ func (mc *MapConverter) ValidatePyValue(varName string) string {
     return fmt.Sprintf("PyDict_Check(%s)", varName)
 }
 
-// PyTupleTarget is just a PyObject*
-func (mc *MapConverter) PyTupleTarget(ident int) string {
-    return fmt.Sprintf("PyObject *dict%d", ident)
-}
-
-// PyParseTupleArgs returns multiple args because we can leverage
-// python to type-check this one for us
-func (mc *MapConverter) PyParseTupleArgs(ident int) string {
-    return fmt.Sprintf("&PyDict_Type, &dict%d", ident)
-}
-
-// PyTupleResult returns the name of the checked var generated for PyTupleTarget
-func (mc *MapConverter) PyTupleResult(ident int) string {
-    return fmt.Sprintf("dict%d", ident)
-}
-
-// PyTupleFormat returns the type for type-asserted object
-func (mc *MapConverter) PyTupleFormat() string {
-    return "O!"
-}
-
 // CDeclarations declares methods for json conversions to and from dict objs
 func (mc *MapConverter) CDeclarations() string {
     return `
@@ -87,7 +66,7 @@ PyObject*
 ParseMapJSON(char *json) 
 {
     PyObject *jsonMod = PyImport_ImportModuleNoBlock("json");
-    PyObject *argList = Py_BuildValue("s", json);
+    PyObject *argList = Py_BuildValue("(s)", json);
     PyObject *loadsFunc = PyObject_GetAttrString(jsonMod, "loads");
     PyObject *result = PyEval_CallObject(loadsFunc, argList);
     Py_DECREF(loadsFunc);
@@ -104,7 +83,7 @@ DictToJSON(PyObject *dict)
         return NULL;
     }
     PyObject *jsonMod = PyImport_ImportModuleNoBlock("json");
-    PyObject *argList = Py_BuildValue("O", dict);
+    PyObject *argList = Py_BuildValue("(O)", dict);
     PyObject *dumpsFunc = PyObject_GetAttrString(jsonMod, "dumps");
     PyObject *result = PyEval_CallObject(dumpsFunc, argList);
     Py_DECREF(dumpsFunc);

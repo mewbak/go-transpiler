@@ -1,5 +1,6 @@
 #define Py_LIMITED_API
 #include <Python.h>
+#include "datetime.h"
 #include "structmember.h"
 
 {{range .Types}}
@@ -14,6 +15,9 @@ static PyMethodDef {{.Name}}Methods[] = {
 
 PyMODINIT_FUNC init{{pyModuleName}}(void)
 {
+
+  PyDateTime_IMPORT;
+
   {{range .Types}}
   {{- if .Name}}
   if(PyType_Ready(&{{.Name}}_type) < 0) {
@@ -34,4 +38,5 @@ PyMODINIT_FUNC init{{pyModuleName}}(void)
   PyModule_AddObject(m, "{{.Name}}", (PyObject *)&{{.Name}}_type);
   {{- end}}
   {{- end}}
+
 }

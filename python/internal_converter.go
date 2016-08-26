@@ -66,27 +66,6 @@ func (ic *InternalConverter) ValidatePyValue(varName string) string {
     return fmt.Sprintf("PyObject_TypeCheck(%s, &%s_type)", varName, ic.Name)
 }
 
-// PyTupleTarget is just a PyObject*
-func (ic *InternalConverter) PyTupleTarget(ident int) string {
-    return fmt.Sprintf("PyObject *%s%d", ic.Name, ident)
-}
-
-// PyParseTupleArgs returns multiple args because we can leverage
-// python to type-check this one for us
-func (ic *InternalConverter) PyParseTupleArgs(ident int) string {
-    return fmt.Sprintf("&%s_type, &%s%d", ic.Name, ic.Name, ident)
-}
-
-// PyTupleResult returns the name of the checked var generated for PyTupleTarget
-func (ic *InternalConverter) PyTupleResult(ident int) string {
-    return fmt.Sprintf("%s%d", ic.Name, ident)
-}
-
-// PyTupleFormat returns the type for type-asserted object
-func (ic *InternalConverter) PyTupleFormat() string {
-    return "O!"
-}
-
 // CDeclarations returns nothing
 func (ic *InternalConverter) CDeclarations() string {
     return ""

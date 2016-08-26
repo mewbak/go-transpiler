@@ -6,7 +6,7 @@ extern {{cTransitionType .Type}} go{{$.Name}}_Get{{.Name}}(long long cacheKey);
 static int
 {{$.Name}}_Set{{.Name}}({{$.Name}} *self, PyObject *value, void *closure)
 {
-    if (value == NULL) {
+    if (value == NULL || value == Py_None) {
         PyErr_SetString(PyExc_TypeError, "Cannot delete the {{camelToSnake .Name}} attribute");
         return -1;
     }
