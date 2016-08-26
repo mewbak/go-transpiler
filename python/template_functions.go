@@ -14,9 +14,11 @@ var templateFuncs template.FuncMap
 func init() {
     //template functions
     templateFuncs = template.FuncMap{
-        "externalTypes": externalTypes,
-        "camelToSnake":  camelToSnake,
-        "pyModuleName":  func() string { return pyModuleName },
+        "externalTypes":            externalTypes,
+        "camelToSnake":             camelToSnake,
+        "pyModuleName":             func() string { return pyModuleName },
+        "filterSupportedFunctions": filterSupportedFunctions,
+        "canTranspileField":        canTranspileField,
 
         "goTransitionType": goTransitionType,
         "cTransitionType":  cTransitionType,
@@ -74,6 +76,53 @@ func camelToSnake(name string) string {
 
     return strings.Join(parts, "_")
 
+}
+
+func filterSupportedFunctions(funcs []*transpiler.FunctionMap) []*transpiler.FunctionMap {
+    var ok []*transpiler.FunctionMap
+
+    for _, f := range funcs {
+        accept := true
+        for _, p := range *f.Params {
+            if !canTranspileField(p) {
+                accept = false
+                break
+            }
+        }
+        for _, r := range *f.Results {
+            if !canTranspileField(r) {
+                accept = false
+                break
+            }
+        }
+        if accept {
+            ok = append(ok, f)
+        }
+    }
+    return ok
+}
+
+func canTranspileField(fm *transpiler.FieldMap) bool {
+    if nil != converters[fm.Type] {
+        return true
+    }
+
+    // no support for types from other packages
+    if strings.Contains(fm.TypeExpr, ".") {
+        return false
+    }
+
+    //no support for other anonymous types
+    if strings.Contains(fm.TypeExpr, "{") {
+        return false
+    }
+
+    //no support for other slice or array types
+    if strings.Contains(fm.TypeExpr, "[") {
+        return false
+    }
+
+    return true
 }
 
 func goTransitionType(goType string) string {

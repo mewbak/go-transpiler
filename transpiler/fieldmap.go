@@ -63,6 +63,18 @@ func NewFieldMap() *FieldMap {
     }
 }
 
+// CopyType copies the type information from the src FieldMap
+func (fm *FieldMap) CopyType(src *FieldMap) {
+    fm.Type = src.Type
+    fm.TypeName = src.TypeName
+    fm.TypeExpr = src.TypeExpr
+    fm.KeyType = src.KeyType
+    fm.ValueType = src.ValueType
+    fm.Unnamed = src.Unnamed
+    fm.Pointer = src.Pointer
+    fm.Map = src.Map
+}
+
 // Visit ...
 func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
 
@@ -94,6 +106,12 @@ func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
         fm.Type = "map[" + fm.KeyType + "]" + fm.ValueType
         return nil
 
+    case *ast.InterfaceType:
+        expr := ExpressionToString(node)
+        fm.Type += expr
+        fm.TypeExpr += expr
+        return nil
+
     case *ast.SelectorExpr:
         expr := ExpressionToString(node)
         fm.Type += expr
@@ -108,6 +126,8 @@ func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
             fm.Length = ExpressionToString(node.Len)
         }
         fm.ValueType = ExpressionToString(node.Elt)
+        fm.Type = "[]" + fm.ValueType
+        fm.TypeExpr = "[]" + fm.ValueType
         return nil
 
     case nil:

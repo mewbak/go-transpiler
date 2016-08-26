@@ -40,6 +40,9 @@ func (fm *FunctionMap) Visit(n ast.Node) ast.Visitor {
     switch node := n.(type) {
 
     case *ast.FuncDecl:
+        if node.Recv == nil {
+            fm.receiverMap = NewFieldListMap()
+        }
         return fm
 
     case *ast.Ident:
@@ -78,6 +81,7 @@ func (fm *FunctionMap) Visit(n ast.Node) ast.Visitor {
 
 }
 
+// Finalize goes over this function map and makes sure everything is set right
 func (fm *FunctionMap) Finalize() {
 
     // pull out the reciever if there is one
@@ -93,9 +97,17 @@ func (fm *FunctionMap) Finalize() {
         fm.Results = NewFieldListMap()
     }
 
-    fmt.Println("\nFUNC: ", fm.Name)
-    fmt.Println(fm.Reciever.Type)
-    for _, r := range *fm.receiverMap {
-        fmt.Println(r.Name, r.Type)
+    // backfill param types (name1, name2 string)
+    fmt.Println(fm.Name)
+    var last *FieldMap
+    for i := fm.Params.Count() - 1; i >= 0; i-- {
+        field := (*fm.Params)[i]
+        if nil == last || field.Type != "" {
+            last = field
+        } else {
+            field.CopyType(last)
+        }
+        fmt.Println(" > ", field.Name, " : ", field)
     }
+
 }
