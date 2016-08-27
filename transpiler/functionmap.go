@@ -98,7 +98,6 @@ func (fm *FunctionMap) Finalize() {
     }
 
     // backfill param types (name1, name2 string)
-    fmt.Println(fm.Name)
     var last *FieldMap
     for i := fm.Params.Count() - 1; i >= 0; i-- {
         field := (*fm.Params)[i]
@@ -107,7 +106,6 @@ func (fm *FunctionMap) Finalize() {
         } else {
             field.CopyType(last)
         }
-        fmt.Println(" > ", field.Name, " : ", field)
     }
 
 }

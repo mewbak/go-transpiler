@@ -7,6 +7,17 @@ package main
 #define Py_LIMITED_API
 #include <Python.h>
 
+{{if .Name}}
+{{- $supportedFunctions := filterSupportedFunctions .Functions}}
+{{- range $supportedFunctions}}
+{{- $r := .Results}}
+PyObject *{{$.Name}}_{{.Name}}_BuildResult(
+    {{- range $i, $_ := .Results}}
+    {{cTransitionType .Type}} res{{print $i}}{{if notLast $i $r}},{{end}}
+    {{- end}});
+{{- end}}
+{{- end}}
+
 */
 import "C"
 

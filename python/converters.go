@@ -1,17 +1,28 @@
 package python
 
+import (
+    "regexp"
+    "strings"
+)
+
 func getConverter(goType string) converter {
     if "" == goType {
         panic("empty gotype")
     }
-    if nil == converters[goType] {
-        converters[goType] = NewInternalConverter(goType)
+    for key, conv := range converters {
+        if m, _ := regexp.MatchString(key, goType); m {
+            return conv
+        }
     }
+    if strings.Contains(goType, ".") {
+        panic("cannot find converter for type external to compiled package")
+    }
+    converters[goType] = NewInternalConverter(goType)
     return converters[goType]
 }
 
 var converters = map[string]converter{
-    "string": &SimpleConverter{
+    `^string$`: &SimpleConverter{
         Name:    "string",
         GoTType: "*C.char",
         CTType:  "char*",
@@ -24,7 +35,7 @@ var converters = map[string]converter{
         PyFromC:    "PyString_FromString(%s)",
         PyValidate: "PyString_Check(%s)",
     },
-    "int": &SimpleConverter{
+    `^int$`: &SimpleConverter{
         Name:       "int",
         GoTType:    "int",
         CTType:     "long",
@@ -36,7 +47,7 @@ var converters = map[string]converter{
         PyFromC:    "PyInt_FromLong(%s)",
         PyValidate: "PyInt_Check(%s)",
     },
-    "float": &SimpleConverter{
+    `^float$`: &SimpleConverter{
         Name:       "float",
         GoTType:    "C.double",
         CTType:     "double",
@@ -48,7 +59,7 @@ var converters = map[string]converter{
         PyFromC:    "PyFloat_FromDouble(%s)",
         PyValidate: "PyFloat_Check(%s)",
     },
-    "bool": &SimpleConverter{
+    `^bool$`: &SimpleConverter{
         Name:       "bool",
         GoTType:    "int",
         CTType:     "int",
@@ -60,6 +71,6 @@ var converters = map[string]converter{
         PyFromC:    "%s == 0 ? Py_False : Py_True",
         PyValidate: "PyBool_Check(%s)",
     },
-    "time.Time":              &DateConverter{},
-    "map[string]interface{}": &MapConverter{},
+    `time\.Time`:                  &DateConverter{},
+    `map\[string\]interface\s*{}`: &MapConverter{},
 }

@@ -1,10 +1,10 @@
 {{range .NamedMembers -}}
 
-extern void go{{$.Name}}_Set{{.Name}}(long long cacheKey, {{cTransitionType .Type}} val);
-extern {{cTransitionType .Type}} go{{$.Name}}_Get{{.Name}}(long long cacheKey);
+extern void go{{$.Name}}Set_{{.Name}}(long long cacheKey, {{cTransitionType .Type}} val);
+extern {{cTransitionType .Type}} go{{$.Name}}Get_{{.Name}}(long long cacheKey);
 
 static int
-{{$.Name}}_Set{{.Name}}({{$.Name}} *self, PyObject *value, void *closure)
+{{$.Name}}Set_{{.Name}}({{$.Name}} *self, PyObject *value, void *closure)
 {
     if (value == NULL || value == Py_None) {
         PyErr_SetString(PyExc_TypeError, "Cannot delete the {{camelToSnake .Name}} attribute");
@@ -17,15 +17,15 @@ static int
     }
 
     {{cTransitionType .Type}} val = {{convertPyToC .Type "value"}};
-    go{{$.Name}}_Set{{.Name}}(self->go{{$.Name}}, val);
+    go{{$.Name}}Set_{{.Name}}(self->go{{$.Name}}, val);
     return 0;
 
 }
 
 static PyObject*
-{{$.Name}}_Get{{.Name}}({{$.Name}}* self, void *closure)
+{{$.Name}}Get_{{.Name}}({{$.Name}}* self, void *closure)
 {
-    {{cTransitionType .Type}} val = go{{$.Name}}_Get{{.Name}}(self->go{{$.Name}});
+    {{cTransitionType .Type}} val = go{{$.Name}}Get_{{.Name}}(self->go{{$.Name}});
     PyObject *obj = {{convertPyFromC .Type "val"}};
     return obj;
 }
@@ -36,8 +36,8 @@ static PyGetSetDef {{.Name}}_getseters[] = {
     {{- range .NamedMembers}}
     {
         "{{camelToSnake .Name}}",
-        (getter){{$.Name}}_Get{{.Name}},
-        (setter){{$.Name}}_Set{{.Name}},
+        (getter){{$.Name}}Get_{{.Name}},
+        (setter){{$.Name}}Set_{{.Name}},
         "", //TODO docstring
         NULL, //this should always be NULL as it's assumed as such in {{.Name}}_init()
     },

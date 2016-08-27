@@ -30,8 +30,13 @@ func free{{.Name}}(ref int64) {
 
 {{template "goGetSet.tpl" .}}
 
+{{template "goStructFuncs.tpl" .}}
+
 {{- else -}}{{/*if .Interface*/}}
-{{- /*interfaces act like regular types for python but have no data*/ -}}
+{{- /*
+    interfaces act like regular types for python but
+    have no associated data or functionality
+*/ -}}
 
 var cache{{.Name}} = make(map[int64]{{.Package.Name}}.{{.Name}})
 
