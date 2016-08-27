@@ -71,7 +71,8 @@ PyObject *{{$.Name}}_{{.Name}}_BuildResult(
 {
     {{- if eq 1 (len .Results)}}
     {{- range $i, $_ := .Results}}
-    return {{convertPyFromC .Type (print "res" $i)}};
+    PyObject* res = {{convertPyFromC .Type (print "res" $i)}};
+    return res;
     {{- end}}
     {{- end}}
 } 

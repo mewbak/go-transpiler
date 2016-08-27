@@ -71,6 +71,18 @@ var converters = map[string]converter{
         PyFromC:    "%s == 0 ? Py_False : Py_True",
         PyValidate: "PyBool_Check(%s)",
     },
+    `^error$`: &SimpleConverter{
+        Name:       "error",
+        GoTType:    "*C.char",
+        CTType:     "char*",
+        GoFromC:    "errors.New(C.GoString(%s))",
+        GoToC:      "C.CString(%s.Error())",
+        CFromGo:    "%s",
+        CToGo:      "%s",
+        PyToC:      `"python error"; //%s`,
+        PyFromC:    `NULL; PyErr_SetString(PyExc_RuntimeError, %s); free(%[1]s)`,
+        PyValidate: "PyBool_Check(%s)",
+    },
     `time\.Time`:                  &DateConverter{},
     `map\[string\]interface\s*{}`: &MapConverter{},
 }
