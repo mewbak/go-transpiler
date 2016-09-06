@@ -44,7 +44,7 @@ static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
     {{- end}}
     {{- end}}
 
-    {{range .Params}}
+    {{- range .Params}}
     {{cTransitionType .Type}} argVal_{{.Name}} = {{convertPyToC .Type (print "arg_" .Name)}};
     {{- end}}
 
@@ -70,10 +70,24 @@ PyObject *{{$.Name}}_{{.Name}}_BuildResult(
     {{- end}})
 {
     {{- if eq 1 (len .Results)}}
-    {{- range $i, $_ := .Results}}
-    PyObject* res = {{convertPyFromC .Type (print "res" $i)}};
+    PyObject* res = {{convertPyFromC (index .Results 0).Type "res0"}};
     return res;
+
+    {{- else if gt 1 (len .Results)}}
+    {{- range $i, $_ := .Results}}
+    PyObject* pyRes{{print $i}} = {{convertPyFromC .Type (print "res" $i)}};
     {{- end}}
+    PyObject* res = PyTuple_Pack(
+        {{print (len $r)}},
+        {{- range $i, $_ := .Results}}
+        pyRes{{print $i}}{{if notLast $i $r}},{{end}}
+        {{- end}}
+    );
+    return res;
+
+    {{- else}}
+    Py_INCREF(Py_None);
+    return Py_None;
     {{- end}}
 } 
 
