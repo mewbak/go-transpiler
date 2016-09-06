@@ -1,6 +1,7 @@
 package python
 
 import (
+    "fmt"
     "reflect"
     "regexp"
     "strings"
@@ -103,22 +104,25 @@ func filterSupportedFunctions(funcs []*transpiler.FunctionMap) []*transpiler.Fun
 }
 
 func canTranspileField(fm *transpiler.FieldMap) bool {
-    if nil != converters[fm.Type] {
+    if nil != matchConverter(fm.TypeExpr) {
         return true
     }
 
     // no support for types from other packages
     if strings.Contains(fm.TypeExpr, ".") {
+        fmt.Println(fm.TypeExpr)
         return false
     }
 
     //no support for other anonymous types
     if strings.Contains(fm.TypeExpr, "{") {
+        fmt.Println(fm.TypeExpr)
         return false
     }
 
     //no support for other slice or array types
     if strings.Contains(fm.TypeExpr, "[") {
+        fmt.Println(fm.TypeExpr)
         return false
     }
 

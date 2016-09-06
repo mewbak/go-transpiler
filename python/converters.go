@@ -9,16 +9,24 @@ func getConverter(goType string) converter {
     if "" == goType {
         panic("empty gotype")
     }
-    for key, conv := range converters {
-        if m, _ := regexp.MatchString(key, goType); m {
-            return conv
-        }
+    conv := matchConverter(goType)
+    if nil != conv {
+        return conv
     }
     if strings.Contains(goType, ".") {
         panic("cannot find converter for type external to compiled package")
     }
     converters[goType] = NewInternalConverter(goType)
     return converters[goType]
+}
+
+func matchConverter(goType string) converter {
+    for key, conv := range converters {
+        if m, _ := regexp.MatchString(key, goType); m {
+            return conv
+        }
+    }
+    return nil
 }
 
 var converters = map[string]converter{
@@ -71,18 +79,7 @@ var converters = map[string]converter{
         PyFromC:    "%s == 0 ? Py_False : Py_True",
         PyValidate: "PyBool_Check(%s)",
     },
-    `^error$`: &SimpleConverter{
-        Name:       "error",
-        GoTType:    "*C.char",
-        CTType:     "char*",
-        GoFromC:    "errors.New(C.GoString(%s))",
-        GoToC:      "C.CString(%s.Error())",
-        CFromGo:    "%s",
-        CToGo:      "%s",
-        PyToC:      `"python error"; //%s`,
-        PyFromC:    `NULL; PyErr_SetString(PyExc_RuntimeError, %s); free(%[1]s)`,
-        PyValidate: "PyBool_Check(%s)",
-    },
+    `^error$`:                     &ErrorConverter{},
     `time\.Time`:                  &DateConverter{},
     `map\[string\]interface\s*{}`: &MapConverter{},
 }
