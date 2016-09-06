@@ -64,7 +64,6 @@ func (ec *ErrorConverter) CDefinitions() string {
 PyObject*
 CreatePyException(char *message) 
 {
-    PyErr_NewException(message);
     PyObject *argList = Py_BuildValue("(s)", message);
     PyObject *result = PyEval_CallObject(PyExc_Exception, argList);
     Py_DECREF(argList);
@@ -77,7 +76,7 @@ PyExceptionToString(PyObject *pyExc)
 {
     const char* str = PyString_AsString(pyExc);
     char *mine = (char*)malloc(strlen(str)+1);
-    Py_DECREF(result);
+    Py_DECREF(pyExc);
     return strcpy(mine, str);
 }
 `
@@ -86,7 +85,7 @@ PyExceptionToString(PyObject *pyExc)
 // GoDefinitions defines nothing
 func (ec *ErrorConverter) GoDefinitions() string {
     return `
-func CStringToGoError(str *C.Char) error {
+func CStringToGoError(str *C.char) error {
     defer C.free(unsafe.Pointer(str))
     return errors.New(C.GoString(str))
 }
