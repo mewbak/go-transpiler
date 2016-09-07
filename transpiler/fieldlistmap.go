@@ -29,6 +29,15 @@ func (flm *FieldListMap) Visit(n ast.Node) ast.Visitor {
         if len(node.Names) == 0 {
             field.Unnamed = true
         }
+        // multiple names share the type (one, two string)
+        for i, name := range node.Names {
+            if i == len(node.Names)-1 {
+                break
+            }
+            f := NewFieldMap()
+            f.Name = name.String()
+            flm.Add(f)
+        }
         flm.Add(field)
         return field
 
@@ -51,4 +60,13 @@ func (flm *FieldListMap) Add(field *FieldMap) {
 // Count is a shotform to get the length of this list
 func (flm *FieldListMap) Count() int {
     return len(*flm)
+}
+
+// Finalize ...
+func (flm *FieldListMap) Finalize() {
+
+    for _, fm := range *flm {
+        fm.Finalize()
+    }
+
 }
