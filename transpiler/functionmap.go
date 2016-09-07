@@ -21,6 +21,10 @@ type FunctionMap struct {
     Params *FieldListMap
 
     Results *FieldListMap
+
+    // Package is the package that this function
+    // belongs too (set by the calling FileMap)
+    Package *PackageMap
 }
 
 // NewFunctionMap creates a new, empty function map
@@ -81,6 +85,18 @@ func (fm *FunctionMap) Visit(n ast.Node) ast.Visitor {
 
 }
 
+// SetPackage sets the package for this type for
+// easier access in transpiling functions
+func (fm *FunctionMap) SetPackage(pm *PackageMap) {
+    fm.Package = pm
+    for _, p := range *fm.Params {
+        p.SetPackage(pm)
+    }
+    for _, r := range *fm.Results {
+        r.SetPackage(pm)
+    }
+}
+
 // Finalize goes over this function map and makes sure everything is set right
 func (fm *FunctionMap) Finalize() {
 
@@ -96,6 +112,12 @@ func (fm *FunctionMap) Finalize() {
     if nil == fm.Results {
         fm.Results = NewFieldListMap()
     }
+
+    if nil != fm.Reciever {
+        fm.Reciever.Finalize()
+    }
+    fm.Params.Finalize()
+    fm.Results.Finalize()
 
     // backfill param types (name1, name2 string)
     var last *FieldMap

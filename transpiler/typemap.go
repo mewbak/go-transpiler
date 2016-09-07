@@ -105,11 +105,15 @@ func (tm *TypeMap) Visit(n ast.Node) ast.Visitor {
 // easier access in transpiling functions
 func (tm *TypeMap) SetPackage(pm *PackageMap) {
     tm.Package = pm
+    for _, m := range *tm.Members {
+        m.SetPackage(pm)
+    }
 }
 
 // Finalize ...
 func (tm *TypeMap) Finalize() {
 
+    tm.Members.Finalize()
     for _, m := range *tm.Members {
         if m.Name != "" {
             tm.NamedMembers.Add(m)
