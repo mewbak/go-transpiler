@@ -96,11 +96,11 @@ func (fm *FileMap) Finalize() {
     for _, f := range fm.Functions {
 
         f.Finalize()
-        if f.Reciever == nil {
+        if f.Receiver == nil {
             continue
         }
 
-        t := f.Reciever.TypeName
+        t := f.Receiver.TypeName
         if fm.TypesByName[t] != nil {
             fm.TypesByName[t].Functions = append(
                 fm.TypesByName[t].Functions, f)
