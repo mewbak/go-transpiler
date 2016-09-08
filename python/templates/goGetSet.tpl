@@ -1,18 +1,18 @@
 {{range .NamedMembers -}}
 
-//export go{{$.Name}}_Set{{.Name}}
-func go{{$.Name}}_Set{{.Name}}(cacheKey int64, val {{goTransitionType .Type}}) {
+//export go{{$.Name}}Set_{{.Name}}
+func go{{$.Name}}Set_{{.Name}}(cacheKey int64, val {{goTransitionType .}}) {
 
-    goVal := {{convertGoFromC .Type "val"}}
+    goVal := {{convertGoFromC . "val"}}
     cache{{$.Name}}[cacheKey].{{.Name}} = goVal 
 
 }
 
-//export go{{$.Name}}_Get{{.Name}}
-func go{{$.Name}}_Get{{.Name}}(cacheKey int64) {{goTransitionType .Type}} {
+//export go{{$.Name}}Get_{{.Name}}
+func go{{$.Name}}Get_{{.Name}}(cacheKey int64) {{goTransitionType .}} {
 
     val := cache{{$.Name}}[cacheKey].{{.Name}}
-    return {{convertGoToC .Type "val"}}
+    return {{convertGoToC . "val"}}
 
 }
 

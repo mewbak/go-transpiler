@@ -8,6 +8,7 @@ type SimpleConverter struct {
     Name       string
     GoTType    string
     CTType     string
+    CParam     string
     GoFromC    string
     GoToC      string
     CFromGo    string
@@ -31,6 +32,11 @@ func (sc *SimpleConverter) GoTransitionType() string {
 // CTransitionType returns the CTType string
 func (sc *SimpleConverter) CTransitionType() string {
     return sc.CTType
+}
+
+// ConvertGoParamForCFunc formats CParam
+func (sc *SimpleConverter) ConvertGoParamForCFunc(varName string) string {
+    return fmt.Sprintf(sc.CParam, varName)
 }
 
 // ConvertGoFromC formats the FromC string

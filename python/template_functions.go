@@ -14,19 +14,22 @@ var templateFuncs template.FuncMap
 func init() {
     //template functions
     templateFuncs = template.FuncMap{
-        "externalTypes": externalTypes,
-        "camelToSnake":  camelToSnake,
-        "pyModuleName":  func() string { return pyModuleName },
+        "externalTypes":            externalTypes,
+        "camelToSnake":             camelToSnake,
+        "pyModuleName":             func() string { return pyModuleName },
+        "filterSupportedFunctions": filterSupportedFunctions,
+        "canTranspileField":        canTranspileField,
 
-        "goTransitionType": goTransitionType,
-        "cTransitionType":  cTransitionType,
-        "convertGoFromC":   convertGoFromC,
-        "convertGoToC":     convertGoToC,
-        "convertCFromGo":   convertCFromGo,
-        "convertCToGo":     convertCToGo,
-        "convertPyFromC":   convertPyFromC,
-        "convertPyToC":     convertPyToC,
-        "validatePyValue":  validatePyValue,
+        "goTransitionType":       goTransitionType,
+        "cTransitionType":        cTransitionType,
+        "convertGoParamForCFunc": convertGoParamForCFunc,
+        "convertGoFromC":         convertGoFromC,
+        "convertGoToC":           convertGoToC,
+        "convertCFromGo":         convertCFromGo,
+        "convertCToGo":           convertCToGo,
+        "convertPyFromC":         convertPyFromC,
+        "convertPyToC":           convertPyToC,
+        "validatePyValue":        validatePyValue,
 
         "notLast": notLast,
     }
@@ -76,40 +79,78 @@ func camelToSnake(name string) string {
 
 }
 
-func goTransitionType(goType string) string {
-    return getConverter(goType).GoTransitionType()
+func filterSupportedFunctions(funcs []*transpiler.FunctionMap) []*transpiler.FunctionMap {
+    var ok []*transpiler.FunctionMap
+
+    for _, f := range funcs {
+        accept := true
+        for _, p := range *f.Params {
+            if !canTranspileField(p) {
+                accept = false
+                break
+            }
+        }
+        for _, r := range *f.Results {
+            if !canTranspileField(r) {
+                accept = false
+                break
+            }
+        }
+        if accept {
+            ok = append(ok, f)
+        }
+    }
+    return ok
 }
 
-func cTransitionType(goType string) string {
-    return getConverter(goType).CTransitionType()
+func canTranspileField(fm *transpiler.FieldMap) bool {
+
+    c, _ := getConverter(fm)
+    if c != nil {
+        return true
+    }
+    return false
+
 }
 
-func convertGoFromC(goType, varName string) string {
-    return getConverter(goType).ConvertGoFromC(varName)
+func goTransitionType(fm *transpiler.FieldMap) string {
+    return mustGetConverter(fm).GoTransitionType()
 }
 
-func convertGoToC(goType, varName string) string {
-    return getConverter(goType).ConvertGoToC(varName)
+func cTransitionType(fm *transpiler.FieldMap) string {
+    return mustGetConverter(fm).CTransitionType()
 }
 
-func convertCFromGo(goType, varName string) string {
-    return getConverter(goType).ConvertCFromGo(varName)
+func convertGoFromC(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertGoFromC(varName)
 }
 
-func convertCToGo(goType, varName string) string {
-    return getConverter(goType).ConvertCToGo(varName)
+func convertGoParamForCFunc(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertGoParamForCFunc(varName)
 }
 
-func convertPyFromC(goType, varName string) string {
-    return getConverter(goType).ConvertPyFromC(varName)
+func convertGoToC(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertGoToC(varName)
 }
 
-func convertPyToC(goType, varName string) string {
-    return getConverter(goType).ConvertPyToC(varName)
+func convertCFromGo(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertCFromGo(varName)
 }
 
-func validatePyValue(goType, varName string) string {
-    return getConverter(goType).ValidatePyValue(varName)
+func convertCToGo(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertCToGo(varName)
+}
+
+func convertPyFromC(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertPyFromC(varName)
+}
+
+func convertPyToC(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertPyToC(varName)
+}
+
+func validatePyValue(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ValidatePyValue(varName)
 }
 
 type counter interface {

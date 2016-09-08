@@ -2,6 +2,7 @@
 #include <Python.h>
 #include "datetime.h"
 #include "structmember.h"
+#include "type_conversions.h"
 
 {{range .Types}}
 {{- if .Name}}
@@ -9,9 +10,7 @@
 {{- end}}
 {{- end}}
 
-static PyMethodDef {{.Name}}Methods[] = {
-  { NULL, NULL, 0, NULL }
-};
+{{template "cFuncs.tpl" .}}
 
 PyMODINIT_FUNC init{{pyModuleName}}(void)
 {

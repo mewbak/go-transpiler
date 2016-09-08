@@ -38,7 +38,7 @@ func (b *Builder) Build(pm *transpiler.PackageMap, outDir, name string) ([]strin
     for _, tm := range pm.Types {
 
         if tm.Name == "" {
-            fmt.Printf("skipping unnamed type...")
+            fmt.Println("skipping unnamed type...")
             continue
         }
 
@@ -245,7 +245,6 @@ func (b *Builder) buildMainFiles() ([]string, error) {
 
 func runGoImports(f string) error {
     abs, _ := filepath.Abs(f)
-    fmt.Println("goimports", "-w", abs)
     cmd := exec.Command("goimports", "-w", abs)
     out, err := cmd.CombinedOutput()
     if nil != err {

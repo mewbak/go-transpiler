@@ -31,7 +31,7 @@ type TypeMap struct {
     Package *PackageMap
 
     // Functions is a list of functions that this type
-    // is a reciever for (populated by the calling FileMap)
+    // is a receiver for (populated by the calling FileMap)
     Functions []*FunctionMap
 
     // Interface is set to true when this type
@@ -105,11 +105,15 @@ func (tm *TypeMap) Visit(n ast.Node) ast.Visitor {
 // easier access in transpiling functions
 func (tm *TypeMap) SetPackage(pm *PackageMap) {
     tm.Package = pm
+    for _, m := range *tm.Members {
+        m.SetPackage(pm)
+    }
 }
 
 // Finalize ...
 func (tm *TypeMap) Finalize() {
 
+    tm.Members.Finalize()
     for _, m := range *tm.Members {
         if m.Name != "" {
             tm.NamedMembers.Add(m)

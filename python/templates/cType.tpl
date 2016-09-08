@@ -58,7 +58,7 @@ static int
     }
     {{range .NamedMembers}}
     if(NULL != arg{{.Name}} &&
-       0 != {{$.Name}}_Set{{.Name}}(self, arg{{.Name}}, NULL)){
+       0 != {{$.Name}}Set_{{.Name}}(self, arg{{.Name}}, NULL)){
         return -1;
     }
     {{- end}}
@@ -67,7 +67,7 @@ static int
     return 0;
 }
 
-{{template "cStructFuncs.tpl" .}}
+{{template "cTypeFuncs.tpl" .}}
 
 PyTypeObject {{.Name}}_type = {
   PyObject_HEAD_INIT(NULL)

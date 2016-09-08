@@ -22,6 +22,10 @@ func ExpressionToString(exp ast.Expr) string {
     case *ast.Ident:
         return e.String()
 
+    case *ast.StarExpr:
+        members = append(members, "*")
+        break
+
     case nil:
         return ""
 

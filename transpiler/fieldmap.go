@@ -40,6 +40,10 @@ type FieldMap struct {
     // expression used to denote the lentgth of this array
     Length string
 
+    // Package is the package that this type
+    // belongs too (set by the calling FileMap)
+    Package *PackageMap
+
     // These booleans describe the type of field
     Unnamed bool
     Pointer bool
@@ -57,10 +61,30 @@ func NewFieldMap() *FieldMap {
         TypeExpr:  "",
         KeyType:   "",
         ValueType: "",
+        Length:    "",
+        Package:   nil,
         Unnamed:   false,
         Pointer:   false,
         Map:       false,
     }
+}
+
+func (fm *FieldMap) String() string {
+    return fmt.Sprintf(`FieldMap{Name: "%s", Type: "%s", U>P>M: %t>%t>%t}`,
+        fm.Name, fm.TypeExpr, fm.Unnamed, fm.Pointer, fm.Map)
+}
+
+// CopyType copies the type information from the src FieldMap
+func (fm *FieldMap) CopyType(src *FieldMap) {
+    fm.Type = src.Type
+    fm.TypeName = src.TypeName
+    fm.TypeExpr = src.TypeExpr
+    fm.KeyType = src.KeyType
+    fm.ValueType = src.ValueType
+    fm.Unnamed = src.Unnamed
+    fm.Pointer = src.Pointer
+    fm.Map = src.Map
+    fm.Package = src.Package
 }
 
 // Visit ...
@@ -77,8 +101,6 @@ func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
         if "" == fm.Name && !fm.Unnamed {
             fm.Name = node.String()
         } else {
-            fm.Type += node.String()
-            fm.TypeExpr += node.String()
             fm.TypeName = node.String()
         }
         return nil
@@ -92,6 +114,13 @@ func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
         fm.KeyType = ExpressionToString(node.Key)
         fm.ValueType = ExpressionToString(node.Value)
         fm.Type = "map[" + fm.KeyType + "]" + fm.ValueType
+        fm.TypeExpr = fm.Type
+        return nil
+
+    case *ast.InterfaceType:
+        expr := ExpressionToString(node)
+        fm.Type += expr
+        fm.TypeExpr += expr
         return nil
 
     case *ast.SelectorExpr:
@@ -108,6 +137,8 @@ func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
             fm.Length = ExpressionToString(node.Len)
         }
         fm.ValueType = ExpressionToString(node.Elt)
+        fm.Type = "[]" + fm.ValueType
+        fm.TypeExpr = "[]" + fm.ValueType
         return nil
 
     case nil:
@@ -118,5 +149,19 @@ func (fm *FieldMap) Visit(n ast.Node) ast.Visitor {
         return nil
 
     }
+
+}
+
+// SetPackage sets the package for this field for
+// easier access in transpiling functions
+func (fm *FieldMap) SetPackage(pm *PackageMap) {
+    fm.Package = pm
+}
+
+// Finalize ...
+func (fm *FieldMap) Finalize() {
+
+    fm.Type += fm.TypeName
+    fm.TypeExpr += fm.TypeName
 
 }

@@ -35,7 +35,7 @@ func NewFileMap(file *ast.File, name string) *FileMap {
 // Visit ...
 func (fm *FileMap) Visit(n ast.Node) ast.Visitor {
 
-    switch n.(type) {
+    switch node := n.(type) {
 
     case *ast.File:
         return fm
@@ -51,6 +51,7 @@ func (fm *FileMap) Visit(n ast.Node) ast.Visitor {
 
     case *ast.FuncDecl:
         funcMap := NewFunctionMap()
+        funcMap.Visit(node)
         fm.Functions = append(fm.Functions, funcMap)
         return funcMap
 
@@ -76,6 +77,10 @@ func (fm *FileMap) SetPackage(pm *PackageMap) {
     for _, tm := range fm.Types {
         tm.SetPackage(pm)
     }
+    for _, f := range fm.Functions {
+        f.SetPackage(pm)
+    }
+
 }
 
 // Finalize ...
@@ -91,13 +96,12 @@ func (fm *FileMap) Finalize() {
     for _, f := range fm.Functions {
 
         f.Finalize()
-        if f.Reciever == nil {
+        if f.Receiver == nil {
             continue
         }
 
-        t := f.Reciever.TypeName
+        t := f.Receiver.TypeName
         if fm.TypesByName[t] != nil {
-
             fm.TypesByName[t].Functions = append(
                 fm.TypesByName[t].Functions, f)
 

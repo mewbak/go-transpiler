@@ -3,6 +3,9 @@
 var cache{{.Name}} = make(map[int64]*{{.Package.Name}}.{{.Name}})
 
 func getCached{{.Name}}(item *{{.Package.Name}}.{{.Name}}) int64 {
+    if nil == item {
+        return -1
+    }
     for key, cached := range cache{{.Name}} {
         if cached == item {
             return key
@@ -30,8 +33,13 @@ func free{{.Name}}(ref int64) {
 
 {{template "goGetSet.tpl" .}}
 
+{{template "goTypeFuncs.tpl" .}}
+
 {{- else -}}{{/*if .Interface*/}}
-{{- /*interfaces act like regular types for python but have no data*/ -}}
+{{- /*
+    interfaces act like regular types for python but
+    have no associated data or functionality
+*/ -}}
 
 var cache{{.Name}} = make(map[int64]{{.Package.Name}}.{{.Name}})
 
