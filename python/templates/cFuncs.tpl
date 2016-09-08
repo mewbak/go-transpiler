@@ -1,5 +1,5 @@
 {{/*
-    cStructFuncs renders methods that have a reviever type.
+    cFuncs renders methods that have a reviever type.
 
     Note that golang needs to re-pack results into a python
     tuple if there is more than one argument. For this reason
@@ -7,19 +7,20 @@
     are declared in go.tpl so that they are visible to golang.
 */ -}}
 {{$supportedFunctions := filterSupportedFunctions .Functions -}}
-/* BEGIN TYPE FUNCTIONS */
+/**BEGIN GLOBAL FUNCS**/
+
 {{- range $supportedFunctions}}
 {{- $p := .Params}}
 {{- $r := .Results}}
-
-extern PyObject* go{{$.Name}}_{{.Name}}(
-    long long cacheKey{{if len .Params}},{{end}}
+{{- if not .Receiver}}
+extern PyObject* go_{{.Name}}(
     {{- range $i, $_ := .Params}}
     {{cTransitionType .}} arg_{{.Name}}{{if notLast $i $p}},{{end}}
     {{- end}}
 );
 
-static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
+static PyObject* {{$.Name}}_{{.Name}}(PyObject *self, PyObject *args)
+{
     {{if len .Params}}
     {{- range $i, $_ := .Params}}
     PyObject* arg_{{.Name}} = NULL;
@@ -48,8 +49,7 @@ static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
     {{cTransitionType .}} argVal_{{.Name}} = {{convertPyToC . (print "arg_" .Name)}};
     {{- end}}
 
-    PyObject *res = go{{$.Name}}_{{.Name}}(
-        self->go{{$.Name}}{{if (len .Params)}},{{end}}
+    PyObject *res = go_{{.Name}}(
         {{- range $i, $_ := .Params}}
         argVal_{{.Name}}{{if notLast $i $p}},{{end}}
         {{- end}}
@@ -83,18 +83,24 @@ PyObject *{{$.Name}}_{{.Name}}_BuildResult(
         pyRes{{print $i}}{{if notLast $i $r}},{{end}}
         {{- end}}
     );
+
+    {{- range $i, $_ := .Results}}
+    Py_DECREF(pyRes{{print $i}});
+    {{- end}}
+
     return res;
 
     {{- else}}
     Py_INCREF(Py_None);
     return Py_None;
     {{- end}}
-} 
-
+}
 {{end}}
+{{- end}}
 
-static PyMethodDef {{.Name}}_methods[] = {
+static PyMethodDef {{.Name}}Methods[] = {
     {{- range $supportedFunctions}}
+    {{- if not .Receiver}}
     {
         "{{camelToSnake .Name}}",
         (PyCFunction){{$.Name}}_{{.Name}},
@@ -102,7 +108,8 @@ static PyMethodDef {{.Name}}_methods[] = {
         "" //TODO docstring generation
     },
     {{- end}}
-    {NULL}
+    {{- end}}
+    { NULL, NULL, 0, NULL }
 };
 
-/* END TYPE FUNCTIONS */
+/**END GLOBAL FUNCS**/

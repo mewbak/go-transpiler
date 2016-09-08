@@ -67,7 +67,7 @@ static int
     return 0;
 }
 
-{{template "cStructFuncs.tpl" .}}
+{{template "cTypeFuncs.tpl" .}}
 
 PyTypeObject {{.Name}}_type = {
   PyObject_HEAD_INIT(NULL)

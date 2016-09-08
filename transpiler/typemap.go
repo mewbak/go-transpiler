@@ -31,7 +31,7 @@ type TypeMap struct {
     Package *PackageMap
 
     // Functions is a list of functions that this type
-    // is a reciever for (populated by the calling FileMap)
+    // is a receiver for (populated by the calling FileMap)
     Functions []*FunctionMap
 
     // Interface is set to true when this type

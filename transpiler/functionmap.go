@@ -14,8 +14,8 @@ type FunctionMap struct {
     // Name is the name of this function
     Name string
 
-    // Reciever defines this function as a method to the given field
-    Reciever    *FieldMap
+    // Receiver defines this function as a method to the given field
+    Receiver    *FieldMap
     receiverMap *FieldListMap
 
     Params *FieldListMap
@@ -31,7 +31,7 @@ type FunctionMap struct {
 func NewFunctionMap() *FunctionMap {
     return &FunctionMap{
         Name:        "",
-        Reciever:    nil,
+        Receiver:    nil,
         receiverMap: nil,
         Params:      nil,
         Results:     nil,
@@ -89,8 +89,8 @@ func (fm *FunctionMap) Visit(n ast.Node) ast.Visitor {
 // easier access in transpiling functions
 func (fm *FunctionMap) SetPackage(pm *PackageMap) {
     fm.Package = pm
-    if nil != fm.Reciever {
-        fm.Reciever.SetPackage(pm)
+    if nil != fm.Receiver {
+        fm.Receiver.SetPackage(pm)
     }
     fm.Params.SetPackage(pm)
     fm.Results.SetPackage(pm)
@@ -99,9 +99,9 @@ func (fm *FunctionMap) SetPackage(pm *PackageMap) {
 // Finalize goes over this function map and makes sure everything is set right
 func (fm *FunctionMap) Finalize() {
 
-    // pull out the reciever if there is one
+    // pull out the receiver if there is one
     if nil != fm.receiverMap && fm.receiverMap.Count() > 0 {
-        fm.Reciever = (*fm.receiverMap)[0]
+        fm.Receiver = (*fm.receiverMap)[0]
     }
 
     // Ensure there are no nil lists
@@ -112,8 +112,8 @@ func (fm *FunctionMap) Finalize() {
         fm.Results = NewFieldListMap()
     }
 
-    if nil != fm.Reciever {
-        fm.Reciever.Finalize()
+    if nil != fm.Receiver {
+        fm.Receiver.Finalize()
     }
     fm.Params.Finalize()
     fm.Results.Finalize()
