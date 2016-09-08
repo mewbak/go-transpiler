@@ -21,4 +21,4 @@ PyObject *{{$.Name}}_{{.Name}}_BuildResult(
 */
 import "C"
 
-{{if .Name}}{{template "goStruct.tpl" .}}{{end}}
+{{if .Name}}{{template "goType.tpl" .}}{{end}}

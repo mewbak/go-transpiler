@@ -9,9 +9,7 @@
 {{- end}}
 {{- end}}
 
-static PyMethodDef {{.Name}}Methods[] = {
-  { NULL, NULL, 0, NULL }
-};
+{{template "cFuncs.tpl"}}
 
 PyMODINIT_FUNC init{{pyModuleName}}(void)
 {

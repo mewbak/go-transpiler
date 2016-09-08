@@ -30,7 +30,7 @@ func free{{.Name}}(ref int64) {
 
 {{template "goGetSet.tpl" .}}
 
-{{template "goStructFuncs.tpl" .}}
+{{template "goTypeFuncs.tpl" .}}
 
 {{- else -}}{{/*if .Interface*/}}
 {{- /*
