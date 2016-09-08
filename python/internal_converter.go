@@ -1,17 +1,36 @@
 package python
 
-import "fmt"
+import (
+    "fmt"
+    "regexp"
+
+    "github.com/KloudKtrl/go-transpiler/transpiler"
+)
+
+var intTypeRegex = regexp.MustCompile(`\*?\w+`)
 
 // InternalConverter is used to convert a type that is
 // defined within the package that is being transpiled
 type InternalConverter struct {
-    Name string
+    Name         string
+    PackagedName string
+    fm           *transpiler.FieldMap
 }
 
 // NewInternalConverter creates a new internal converter
 // object for the internal type defined in the given TypeMap
-func NewInternalConverter(name string) *InternalConverter {
-    return &InternalConverter{name}
+func NewInternalConverter(fm *transpiler.FieldMap) (*InternalConverter, error) {
+
+    if fm.TypeExpr != intTypeRegex.FindString(fm.TypeExpr) {
+        return nil, fmt.Errorf(
+            "cannot create converter, not valid internal type %s", fm.TypeExpr)
+    }
+
+    return &InternalConverter{
+        Name:         fm.Type,
+        PackagedName: fmt.Sprintf("%s.%s", fm.Package.Name, fm.Type),
+        fm:           fm,
+    }, nil
 }
 
 // GoType returns internal type's name
@@ -29,6 +48,11 @@ func (ic *InternalConverter) GoTransitionType() string {
 // this item in the cache
 func (ic *InternalConverter) CTransitionType() string {
     return "long long"
+}
+
+// ConvertGoParamForCFunc casts a go int64 to C.lonlong
+func (ic *InternalConverter) ConvertGoParamForCFunc(varName string) string {
+    return fmt.Sprintf("C.longlong(%s)", varName)
 }
 
 // ConvertGoFromC uses cache lookup to get object
@@ -53,7 +77,7 @@ func (ic *InternalConverter) ConvertCToGo(varName string) string {
 
 // ConvertPyFromC ...TODO... his should create a valid item
 func (ic *InternalConverter) ConvertPyFromC(varName string) string {
-    return fmt.Sprintf("NULL")
+    return fmt.Sprintf("Py_None; Py_INCREF(Py_None)")
 }
 
 // ConvertPyToC accesses the cache key for this object

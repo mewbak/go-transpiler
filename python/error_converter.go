@@ -15,6 +15,11 @@ func (ec *ErrorConverter) CTransitionType() string {
     return "char*"
 }
 
+// ConvertGoParamForCFunc does nothing
+func (ec *ErrorConverter) ConvertGoParamForCFunc(varName string) string {
+    return varName
+}
+
 // ConvertGoFromC creates a new go error object
 func (ec *ErrorConverter) ConvertGoFromC(varName string) string {
     return fmt.Sprintf("CStringToGoError(%s)", varName)
@@ -47,7 +52,7 @@ func (ec *ErrorConverter) ConvertPyToC(varName string) string {
 
 // ValidatePyValue does nothing, any PyObject can be stringified for conversion
 func (ec *ErrorConverter) ValidatePyValue(varName string) string {
-    return fmt.Sprintf("true")
+    return fmt.Sprintf("1")
 }
 
 // CDeclarations declares methods for json conversions to and from dict objs

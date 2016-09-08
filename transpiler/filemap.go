@@ -77,6 +77,10 @@ func (fm *FileMap) SetPackage(pm *PackageMap) {
     for _, tm := range fm.Types {
         tm.SetPackage(pm)
     }
+    for _, f := range fm.Functions {
+        f.SetPackage(pm)
+    }
+
 }
 
 // Finalize ...

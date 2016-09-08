@@ -89,12 +89,11 @@ func (fm *FunctionMap) Visit(n ast.Node) ast.Visitor {
 // easier access in transpiling functions
 func (fm *FunctionMap) SetPackage(pm *PackageMap) {
     fm.Package = pm
-    for _, p := range *fm.Params {
-        p.SetPackage(pm)
+    if nil != fm.Reciever {
+        fm.Reciever.SetPackage(pm)
     }
-    for _, r := range *fm.Results {
-        r.SetPackage(pm)
-    }
+    fm.Params.SetPackage(pm)
+    fm.Results.SetPackage(pm)
 }
 
 // Finalize goes over this function map and makes sure everything is set right

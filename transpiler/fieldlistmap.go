@@ -62,6 +62,16 @@ func (flm *FieldListMap) Count() int {
     return len(*flm)
 }
 
+// SetPackage sets the package that this and all
+// underlying elements belongs to
+func (flm *FieldListMap) SetPackage(pm *PackageMap) {
+
+    for _, fm := range *flm {
+        fm.SetPackage(pm)
+    }
+
+}
+
 // Finalize ...
 func (flm *FieldListMap) Finalize() {
 

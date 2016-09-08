@@ -8,12 +8,12 @@
 func go{{$.Name}}_{{.Name}}(
     cacheKey int64,
     {{- range $i, $_ := .Params}}
-    {{.Name}} {{goTransitionType .Type}},
+    {{.Name}} {{goTransitionType .}},
     {{- end}}
 ) *C.PyObject {
 
     {{range .Params}}
-    arg{{.Name}} := {{convertGoFromC .Type .Name}}
+    arg{{.Name}} := {{convertGoFromC . .Name}}
     {{- end}}
 
     self := cache{{$.Name}}[cacheKey]
@@ -27,12 +27,12 @@ func go{{$.Name}}_{{.Name}}(
     )
 
     {{range $i, $_ := .Results}}
-    cRes{{print $i}} := {{convertGoToC .Type (print "res" $i)}}
+    cRes{{print $i}} := {{convertGoToC . (print "res" $i)}}
     {{- end}}
 
     return C.{{$.Name}}_{{.Name}}_BuildResult(
         {{- range $i, $_ := .Results}}
-        cRes{{print $i}},
+        {{convertGoParamForCFunc . (print "cRes" $i)}},
         {{- end}}
     )
 

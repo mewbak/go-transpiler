@@ -1,7 +1,6 @@
 package python
 
 import (
-    "fmt"
     "reflect"
     "regexp"
     "strings"
@@ -21,15 +20,16 @@ func init() {
         "filterSupportedFunctions": filterSupportedFunctions,
         "canTranspileField":        canTranspileField,
 
-        "goTransitionType": goTransitionType,
-        "cTransitionType":  cTransitionType,
-        "convertGoFromC":   convertGoFromC,
-        "convertGoToC":     convertGoToC,
-        "convertCFromGo":   convertCFromGo,
-        "convertCToGo":     convertCToGo,
-        "convertPyFromC":   convertPyFromC,
-        "convertPyToC":     convertPyToC,
-        "validatePyValue":  validatePyValue,
+        "goTransitionType":       goTransitionType,
+        "cTransitionType":        cTransitionType,
+        "convertGoParamForCFunc": convertGoParamForCFunc,
+        "convertGoFromC":         convertGoFromC,
+        "convertGoToC":           convertGoToC,
+        "convertCFromGo":         convertCFromGo,
+        "convertCToGo":           convertCToGo,
+        "convertPyFromC":         convertPyFromC,
+        "convertPyToC":           convertPyToC,
+        "validatePyValue":        validatePyValue,
 
         "notLast": notLast,
     }
@@ -104,65 +104,53 @@ func filterSupportedFunctions(funcs []*transpiler.FunctionMap) []*transpiler.Fun
 }
 
 func canTranspileField(fm *transpiler.FieldMap) bool {
-    if nil != matchConverter(fm.TypeExpr) {
+
+    c, _ := getConverter(fm)
+    if c != nil {
         return true
     }
+    return false
 
-    // no support for types from other packages
-    if strings.Contains(fm.TypeExpr, ".") {
-        fmt.Println(fm.TypeExpr)
-        return false
-    }
-
-    //no support for other anonymous types
-    if strings.Contains(fm.TypeExpr, "{") {
-        fmt.Println(fm.TypeExpr)
-        return false
-    }
-
-    //no support for other slice or array types
-    if strings.Contains(fm.TypeExpr, "[") {
-        fmt.Println(fm.TypeExpr)
-        return false
-    }
-
-    return true
 }
 
-func goTransitionType(goType string) string {
-    return getConverter(goType).GoTransitionType()
+func goTransitionType(fm *transpiler.FieldMap) string {
+    return mustGetConverter(fm).GoTransitionType()
 }
 
-func cTransitionType(goType string) string {
-    return getConverter(goType).CTransitionType()
+func cTransitionType(fm *transpiler.FieldMap) string {
+    return mustGetConverter(fm).CTransitionType()
 }
 
-func convertGoFromC(goType, varName string) string {
-    return getConverter(goType).ConvertGoFromC(varName)
+func convertGoFromC(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertGoFromC(varName)
 }
 
-func convertGoToC(goType, varName string) string {
-    return getConverter(goType).ConvertGoToC(varName)
+func convertGoParamForCFunc(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertGoParamForCFunc(varName)
 }
 
-func convertCFromGo(goType, varName string) string {
-    return getConverter(goType).ConvertCFromGo(varName)
+func convertGoToC(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertGoToC(varName)
 }
 
-func convertCToGo(goType, varName string) string {
-    return getConverter(goType).ConvertCToGo(varName)
+func convertCFromGo(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertCFromGo(varName)
 }
 
-func convertPyFromC(goType, varName string) string {
-    return getConverter(goType).ConvertPyFromC(varName)
+func convertCToGo(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertCToGo(varName)
 }
 
-func convertPyToC(goType, varName string) string {
-    return getConverter(goType).ConvertPyToC(varName)
+func convertPyFromC(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertPyFromC(varName)
 }
 
-func validatePyValue(goType, varName string) string {
-    return getConverter(goType).ValidatePyValue(varName)
+func convertPyToC(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ConvertPyToC(varName)
+}
+
+func validatePyValue(fm *transpiler.FieldMap, varName string) string {
+    return mustGetConverter(fm).ValidatePyValue(varName)
 }
 
 type counter interface {

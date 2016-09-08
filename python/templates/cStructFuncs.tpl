@@ -15,7 +15,7 @@
 extern PyObject* go{{$.Name}}_{{.Name}}(
     long long cacheKey{{if len .Params}},{{end}}
     {{- range $i, $_ := .Params}}
-    {{cTransitionType .Type}} arg_{{.Name}}{{if notLast $i $p}},{{end}}
+    {{cTransitionType .}} arg_{{.Name}}{{if notLast $i $p}},{{end}}
     {{- end}}
 );
 
@@ -37,7 +37,7 @@ static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
         PyErr_SetString(PyExc_TypeError, "not enough parameters, expeted {{len $p}}, got {{print $i}}");
         return NULL;
     }
-    else if (!{{validatePyValue .Type (print "arg_" .Name)}}) {
+    else if (!{{validatePyValue . (print "arg_" .Name)}}) {
         PyErr_SetString(PyExc_TypeError, "invalid parameter type in position {{$i}}");
         return NULL;
     }
@@ -45,7 +45,7 @@ static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
     {{- end}}
 
     {{- range .Params}}
-    {{cTransitionType .Type}} argVal_{{.Name}} = {{convertPyToC .Type (print "arg_" .Name)}};
+    {{cTransitionType .}} argVal_{{.Name}} = {{convertPyToC . (print "arg_" .Name)}};
     {{- end}}
 
     PyObject *res = go{{$.Name}}_{{.Name}}(
@@ -66,16 +66,16 @@ static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
 // to pack tuples if necessary
 PyObject *{{$.Name}}_{{.Name}}_BuildResult(
     {{- range $i, $_ := .Results}}
-    {{cTransitionType .Type}} res{{print $i}}{{if notLast $i $r}},{{end}}
+    {{cTransitionType .}} res{{print $i}}{{if notLast $i $r}},{{end}}
     {{- end}})
 {
     {{- if eq 1 (len .Results)}}
-    PyObject* res = {{convertPyFromC (index .Results 0).Type "res0"}};
+    PyObject* res = {{convertPyFromC (index .Results 0) "res0"}};
     return res;
 
-    {{- else if gt 1 (len .Results)}}
+    {{- else if gt (len .Results) 1}}
     {{- range $i, $_ := .Results}}
-    PyObject* pyRes{{print $i}} = {{convertPyFromC .Type (print "res" $i)}};
+    PyObject* pyRes{{print $i}} = {{convertPyFromC . (print "res" $i)}};
     {{- end}}
     PyObject* res = PyTuple_Pack(
         {{print (len $r)}},

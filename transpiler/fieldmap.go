@@ -84,6 +84,7 @@ func (fm *FieldMap) CopyType(src *FieldMap) {
     fm.Unnamed = src.Unnamed
     fm.Pointer = src.Pointer
     fm.Map = src.Map
+    fm.Package = src.Package
 }
 
 // Visit ...
