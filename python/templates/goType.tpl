@@ -3,6 +3,9 @@
 var cache{{.Name}} = make(map[int64]*{{.Package.Name}}.{{.Name}})
 
 func getCached{{.Name}}(item *{{.Package.Name}}.{{.Name}}) int64 {
+    if nil == item {
+        return -1
+    }
     for key, cached := range cache{{.Name}} {
         if cached == item {
             return key
@@ -30,7 +33,7 @@ func free{{.Name}}(ref int64) {
 
 {{template "goGetSet.tpl" .}}
 
-{{template "goStructFuncs.tpl" .}}
+{{template "goTypeFuncs.tpl" .}}
 
 {{- else -}}{{/*if .Interface*/}}
 {{- /*

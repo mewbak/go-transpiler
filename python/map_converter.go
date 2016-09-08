@@ -16,6 +16,11 @@ func (mc *MapConverter) CTransitionType() string {
     return "char*"
 }
 
+// ConvertGoParamForCFunc does nothing
+func (mc *MapConverter) ConvertGoParamForCFunc(varName string) string {
+    return varName
+}
+
 // ConvertGoFromC uses json to unmarshall the string
 func (mc *MapConverter) ConvertGoFromC(varName string) string {
     return fmt.Sprintf("mapFromJSON(%s)", varName)

@@ -12,4 +12,4 @@
 {{- end}}
 {{- end}}
 
-{{if .Name}}{{template "cStruct.tpl" .}}{{end}}
+{{if .Name}}{{template "cType.tpl" .}}{{end}}

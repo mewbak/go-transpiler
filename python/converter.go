@@ -17,6 +17,11 @@ type converter interface {
     // define extern functions exported from go
     CTransitionType() string
 
+    // ConvertGoParamForCFunc returns a code snippit that can manage
+    // any conversions necessary from the go value of this type so that
+    // it can be used as a parameter in an external c function
+    ConvertGoParamForCFunc(varName string) string
+
     // ConvertGoFromC should return valid go code that
     // takes a c representation of this type and converts it
     // back to go code. The result of this function should be assignable
@@ -61,18 +66,22 @@ type converter interface {
 
     // CDeclarations should return decalrations for anything defined in
     // CDefinitions function. This will be included in the header of all
-    // generated c files
+    // generated c files (this function will only called once for each
+    // converter implementation and is called AFTER all types have been
+    // transpiled to allow for type-specific decarations)
     CDeclarations() string
 
     // CDefintions returns any global definitions that should be included
     // in the conversions.c file. These are utility functions or values
     // that are needed for this converter (this function will only called
-    // once for each converter implementation)
+    // once for each converter implementation and is called AFTER all types
+    // have been transpiled to allow for type-specific definitions)
     CDefinitions() string
 
     // GoDefintions returns any global definitions that should be included
     // in the conversions.go file. These are utility functions or values
     // that are needed for this converter (this function will only called
-    // once for each converter implementation)
+    // once for each converter implementation and is called AFTER all types
+    // have been transpiled to allow for type-specific definitions)
     GoDefinitions() string
 }

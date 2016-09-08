@@ -15,6 +15,11 @@ func (ec *ErrorConverter) CTransitionType() string {
     return "char*"
 }
 
+// ConvertGoParamForCFunc does nothing
+func (ec *ErrorConverter) ConvertGoParamForCFunc(varName string) string {
+    return varName
+}
+
 // ConvertGoFromC creates a new go error object
 func (ec *ErrorConverter) ConvertGoFromC(varName string) string {
     return fmt.Sprintf("CStringToGoError(%s)", varName)
@@ -22,7 +27,7 @@ func (ec *ErrorConverter) ConvertGoFromC(varName string) string {
 
 // ConvertGoToC gets the message from the error
 func (ec *ErrorConverter) ConvertGoToC(varName string) string {
-    return fmt.Sprintf("C.CString(%s.Error())", varName)
+    return fmt.Sprintf("GoErrorToCString(%s)", varName)
 }
 
 // ConvertCFromGo no conversion necessary here
@@ -47,7 +52,7 @@ func (ec *ErrorConverter) ConvertPyToC(varName string) string {
 
 // ValidatePyValue does nothing, any PyObject can be stringified for conversion
 func (ec *ErrorConverter) ValidatePyValue(varName string) string {
-    return fmt.Sprintf("true")
+    return fmt.Sprintf("1")
 }
 
 // CDeclarations declares methods for json conversions to and from dict objs
@@ -64,9 +69,15 @@ func (ec *ErrorConverter) CDefinitions() string {
 PyObject*
 CreatePyException(char *message) 
 {
-    PyObject *argList = Py_BuildValue("(s)", message);
-    PyObject *result = PyEval_CallObject(PyExc_Exception, argList);
-    Py_DECREF(argList);
+    PyObject *result;
+    if(message == "") {
+        Py_INCREF(Py_None);
+        result = Py_None;
+    } else {
+        PyObject *argList = Py_BuildValue("(s)", message);
+        result = PyEval_CallObject(PyExc_Exception, argList);
+        Py_DECREF(argList);
+    }
     free(message);
     return result;
 }
@@ -85,6 +96,13 @@ PyExceptionToString(PyObject *pyExc)
 // GoDefinitions defines nothing
 func (ec *ErrorConverter) GoDefinitions() string {
     return `
+func GoErrorToCString(err error) *C.char {
+    if nil == err {
+        return C.CString("")
+    }
+    return C.CString(err.Error())
+}
+
 func CStringToGoError(str *C.char) error {
     defer C.free(unsafe.Pointer(str))
     return errors.New(C.GoString(str))

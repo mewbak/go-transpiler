@@ -20,6 +20,11 @@ func (dc *DateConverter) CTransitionType() string {
     return "long"
 }
 
+// ConvertGoParamForCFunc does nothing
+func (dc *DateConverter) ConvertGoParamForCFunc(varName string) string {
+    return varName
+}
+
 // ConvertGoFromC formats the FromC string
 func (dc *DateConverter) ConvertGoFromC(varName string) string {
     return fmt.Sprintf("time.Unix(%s, 0)", varName)

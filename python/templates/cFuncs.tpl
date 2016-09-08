@@ -1,5 +1,5 @@
 {{/*
-    cStructFuncs renders methods that have a reviever type.
+    cFuncs renders methods that have a reviever type.
 
     Note that golang needs to re-pack results into a python
     tuple if there is more than one argument. For this reason
@@ -7,19 +7,20 @@
     are declared in go.tpl so that they are visible to golang.
 */ -}}
 {{$supportedFunctions := filterSupportedFunctions .Functions -}}
-/* BEGIN TYPE FUNCTIONS */
+/**BEGIN GLOBAL FUNCS**/
+
 {{- range $supportedFunctions}}
 {{- $p := .Params}}
 {{- $r := .Results}}
-
-extern PyObject* go{{$.Name}}_{{.Name}}(
-    long long cacheKey{{if len .Params}},{{end}}
+{{- if not .Receiver}}
+extern PyObject* go_{{.Name}}(
     {{- range $i, $_ := .Params}}
-    {{cTransitionType .Type}} arg_{{.Name}}{{if notLast $i $p}},{{end}}
+    {{cTransitionType .}} arg_{{.Name}}{{if notLast $i $p}},{{end}}
     {{- end}}
 );
 
-static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
+static PyObject* {{$.Name}}_{{.Name}}(PyObject *self, PyObject *args)
+{
     {{if len .Params}}
     {{- range $i, $_ := .Params}}
     PyObject* arg_{{.Name}} = NULL;
@@ -37,7 +38,7 @@ static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
         PyErr_SetString(PyExc_TypeError, "not enough parameters, expeted {{len $p}}, got {{print $i}}");
         return NULL;
     }
-    else if (!{{validatePyValue .Type (print "arg_" .Name)}}) {
+    else if (!{{validatePyValue . (print "arg_" .Name)}}) {
         PyErr_SetString(PyExc_TypeError, "invalid parameter type in position {{$i}}");
         return NULL;
     }
@@ -45,11 +46,10 @@ static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
     {{- end}}
 
     {{- range .Params}}
-    {{cTransitionType .Type}} argVal_{{.Name}} = {{convertPyToC .Type (print "arg_" .Name)}};
+    {{cTransitionType .}} argVal_{{.Name}} = {{convertPyToC . (print "arg_" .Name)}};
     {{- end}}
 
-    PyObject *res = go{{$.Name}}_{{.Name}}(
-        self->go{{$.Name}}{{if (len .Params)}},{{end}}
+    PyObject *res = go_{{.Name}}(
         {{- range $i, $_ := .Params}}
         argVal_{{.Name}}{{if notLast $i $p}},{{end}}
         {{- end}}
@@ -66,16 +66,16 @@ static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
 // to pack tuples if necessary
 PyObject *{{$.Name}}_{{.Name}}_BuildResult(
     {{- range $i, $_ := .Results}}
-    {{cTransitionType .Type}} res{{print $i}}{{if notLast $i $r}},{{end}}
+    {{cTransitionType .}} res{{print $i}}{{if notLast $i $r}},{{end}}
     {{- end}})
 {
     {{- if eq 1 (len .Results)}}
-    PyObject* res = {{convertPyFromC (index .Results 0).Type "res0"}};
+    PyObject* res = {{convertPyFromC (index .Results 0) "res0"}};
     return res;
 
-    {{- else if gt 1 (len .Results)}}
+    {{- else if gt (len .Results) 1}}
     {{- range $i, $_ := .Results}}
-    PyObject* pyRes{{print $i}} = {{convertPyFromC .Type (print "res" $i)}};
+    PyObject* pyRes{{print $i}} = {{convertPyFromC . (print "res" $i)}};
     {{- end}}
     PyObject* res = PyTuple_Pack(
         {{print (len $r)}},
@@ -83,18 +83,24 @@ PyObject *{{$.Name}}_{{.Name}}_BuildResult(
         pyRes{{print $i}}{{if notLast $i $r}},{{end}}
         {{- end}}
     );
+
+    {{- range $i, $_ := .Results}}
+    Py_DECREF(pyRes{{print $i}});
+    {{- end}}
+
     return res;
 
     {{- else}}
     Py_INCREF(Py_None);
     return Py_None;
     {{- end}}
-} 
-
+}
 {{end}}
+{{- end}}
 
-static PyMethodDef {{.Name}}_methods[] = {
+static PyMethodDef {{.Name}}Methods[] = {
     {{- range $supportedFunctions}}
+    {{- if not .Receiver}}
     {
         "{{camelToSnake .Name}}",
         (PyCFunction){{$.Name}}_{{.Name}},
@@ -102,7 +108,8 @@ static PyMethodDef {{.Name}}_methods[] = {
         "" //TODO docstring generation
     },
     {{- end}}
-    {NULL}
+    {{- end}}
+    { NULL, NULL, 0, NULL }
 };
 
-/* END TYPE FUNCTIONS */
+/**END GLOBAL FUNCS**/
