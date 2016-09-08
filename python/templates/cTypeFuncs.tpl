@@ -1,5 +1,5 @@
 {{/*
-    cStructFuncs renders methods that have a reviever type.
+    cTypeFuncs renders methods that have a reviever type.
 
     Note that golang needs to re-pack results into a python
     tuple if there is more than one argument. For this reason
@@ -19,7 +19,8 @@ extern PyObject* go{{$.Name}}_{{.Name}}(
     {{- end}}
 );
 
-static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args) {
+static PyObject* {{$.Name}}_{{.Name}}({{$.Name}} *self, PyObject *args)
+{
     {{if len .Params}}
     {{- range $i, $_ := .Params}}
     PyObject* arg_{{.Name}} = NULL;
